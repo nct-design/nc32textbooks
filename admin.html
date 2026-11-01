@@ -14,7 +14,6 @@
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    /* Custom scrollbar for tables */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -73,13 +72,8 @@
           </div>
         </div>
 
-        <!-- API 連線設定與登出 -->
+        <!-- 登出按鈕 -->
         <div class="flex items-center space-x-3">
-          <button onclick="promptApiUrl()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 transition-all flex items-center space-x-1.5">
-            <i class="fa-solid fa-plug text-xs text-emerald-400"></i>
-            <span class="hidden sm:inline">GAS API 設定</span>
-          </button>
-          
           <button onclick="handleLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span>登出</span>
@@ -127,7 +121,6 @@
       <!-- ==================== TAB 1: 新開訂單 / 草稿箱 ==================== -->
       <section id="tab-drafts" class="tab-content active space-y-6">
         
-        <!-- 頂部卡片：三聯單與客戶基礎資訊 -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -164,7 +157,6 @@
           </div>
         </div>
 
-        <!-- 中間卡片：選擇學校與快速自動帶出書本 -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -172,7 +164,6 @@
               <span>新增訂購書本 (輸入序號自動帶出)</span>
             </h3>
             
-            <!-- 批次折扣設定 -->
             <div class="flex items-center space-x-2">
               <span class="text-xs text-slate-500 font-medium">整批統一折扣:</span>
               <input type="number" step="0.01" id="bulkDiscountInput" placeholder="0.80" 
@@ -218,7 +209,6 @@
             </div>
           </div>
 
-          <!-- 草稿明細列表 -->
           <div class="overflow-x-auto rounded-xl border border-slate-200">
             <table class="w-full text-left border-collapse text-sm">
               <thead class="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
@@ -236,7 +226,6 @@
                 </tr>
               </thead>
               <tbody id="draftItemsTable" class="divide-y divide-slate-100 font-mono text-xs">
-                <!-- 動態注入草稿書籍 -->
                 <tr>
                   <td colspan="10" class="p-8 text-center text-slate-400 font-sans">目前草稿暫無書籍，請於上方選擇學校並輸入序號加入。</td>
                 </tr>
@@ -244,7 +233,6 @@
             </table>
           </div>
 
-          <!-- 底部備註與總計結算 -->
           <div class="mt-4 flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-4">
             <div class="w-full sm:w-1/2">
               <input type="text" id="draftRemark" placeholder="內部備忘 / 劃花原因 (例: 劃花廢單 / 客人付訂$100)" 
@@ -260,7 +248,6 @@
           </div>
         </div>
 
-        <!-- 操作按鈕區 (Save, Void, Commit) -->
         <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
           <button onclick="saveDraftAction()" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center space-x-2 text-sm">
             <i class="fa-solid fa-floppy-disk"></i>
@@ -283,7 +270,6 @@
       <!-- ==================== TAB 2: 訂單進度管理與智能配貨 ==================== -->
       <section id="tab-orders" class="tab-content space-y-6">
         
-        <!-- 頂部卡片：智能批次配貨與搜尋過濾器 -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -291,7 +277,6 @@
               <span>訂單生命週期追蹤 (YYMMDD 日期驅動狀態)</span>
             </h3>
 
-            <!-- 智能批次配貨小工具 -->
             <div class="flex items-center space-x-2 bg-indigo-50/70 p-2 rounded-xl border border-indigo-100">
               <span class="text-xs font-bold text-indigo-900 whitespace-nowrap pl-1"><i class="fa-solid fa-bolt text-amber-500"></i> 一鍵批次到貨:</span>
               <input type="text" id="batchBookNo" placeholder="輸入書號 BK-001" 
@@ -304,7 +289,6 @@
             </div>
           </div>
 
-          <!-- 搜尋與狀態過濾 -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="relative">
               <input type="text" id="orderSearchInput" onkeyup="filterOrdersTable()" placeholder="搜尋單號 (A-1024) 或 電話..." 
@@ -332,7 +316,6 @@
           </div>
         </div>
 
-        <!-- Orders 正式大表展示 (22 欄關鍵精華) -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
@@ -355,7 +338,6 @@
                 </tr>
               </thead>
               <tbody id="ordersTableBody" class="divide-y divide-slate-100 font-mono">
-                <!-- 載入模擬/真實資料 -->
               </tbody>
             </table>
           </div>
@@ -391,7 +373,6 @@
                 </tr>
               </thead>
               <tbody id="productsTableBody" class="divide-y divide-slate-100 font-mono">
-                <!-- 動態注入 Products -->
               </tbody>
             </table>
           </div>
@@ -421,7 +402,6 @@
                 </tr>
               </thead>
               <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono">
-                <!-- 動態注入 Logs -->
               </tbody>
             </table>
           </div>
@@ -442,9 +422,11 @@
 
   <!-- ==================== JavaScript 核心前端邏輯 ==================== -->
   <script>
-    // 🌐 全局系統狀態 (State)
+    // 🌐 全局系統狀態與 API 設定
     const SYSTEM_PIN = "admin888";
-    let gasApiUrl = localStorage.getItem("GAS_API_URL") || "";
+    
+    // 🔗 已經直接寫死你的 GAS /exec 網址（請將下方字串替換成你實際的部署網址）
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
 
     // 模擬產品庫 (若 GAS 未設定時之備用資料)
     let mockProducts = [
@@ -460,13 +442,11 @@
 
     // 初始化載入
     window.onload = function() {
-      // 預設填入落單日期 YYMMDD
       const now = new Date();
       const yymmdd = String(now.getFullYear()).slice(-2) + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
       document.getElementById('draftOrderDate').value = yymmdd;
       document.getElementById('batchArrivalDate').value = yymmdd;
       
-      // 載入預設產品與表格
       renderProductsTable(mockProducts);
       addSampleLog("系統初始化", "SYSTEM", "後台介面載入完成");
     };
@@ -488,17 +468,7 @@
       document.getElementById('appUI').classList.add('hidden');
       document.getElementById('loginOverlay').classList.remove('hidden');
       document.getElementById('loginPin').value = '';
-      showToast("已安全登入過出", "info");
-    }
-
-    // 📌 GAS API URL 設定
-    function promptApiUrl() {
-      const url = prompt("請輸入 Google Apps Script 部署網頁應用程式 URL:", gasApiUrl);
-      if (url !== null) {
-        gasApiUrl = url.trim();
-        localStorage.setItem("GAS_API_URL", gasApiUrl);
-        showToast("API URL 已儲存！", "success");
-      }
+      showToast("已安全登出", "info");
     }
 
     // 📑 頁籤切換
@@ -520,8 +490,6 @@
     }
 
     // ==================== TAB 1: 新開訂單 / 草稿箱邏輯 ====================
-
-    // 輸入序號自動帶出書籍資料
     function autoFillBySeq() {
       const school = document.getElementById('quickSchoolSelect').value;
       const seqNo = parseInt(document.getElementById('quickSeqNo').value);
@@ -557,7 +525,6 @@
         return;
       }
 
-      // 新增至草稿陣列 (預設 0.8 折扣)
       const defaultDiscount = 0.8;
       const discountPrice = Math.round(found.price * defaultDiscount);
 
@@ -661,7 +628,6 @@
       showToast(`已批次將所有草稿套用 ${bulkDiscount} 折扣`, "success");
     }
 
-    // 儲存草稿至 GAS
     function saveDraftAction() {
       const orderId = document.getElementById('draftOrderId').value.trim();
       const customerName = document.getElementById('draftCustomerName').value.trim();
@@ -694,7 +660,6 @@
       });
     }
 
-    // 劃花作廢
     function voidDraftAction() {
       const orderId = document.getElementById('draftOrderId').value.trim();
       if (!orderId) {
@@ -719,7 +684,6 @@
       });
     }
 
-    // ✅ 確認過數轉入 Orders 大表
     function commitToOrdersAction() {
       const orderId = document.getElementById('draftOrderId').value.trim();
       if (!orderId) {
@@ -737,7 +701,6 @@
         showToast(res.message || "過數成功！已轉入 Orders 大表", "success");
         addSampleLog("轉入正式大表", orderId, "核對過數成功");
         
-        // 本地模擬新增至 Orders
         const orderDate = document.getElementById('draftOrderDate').value;
         const custName = document.getElementById('draftCustomerName').value;
         const phone = document.getElementById('draftPhone').value;
@@ -770,7 +733,6 @@
     }
 
     // ==================== TAB 2: 訂單進度管理與智能配貨 ====================
-
     function renderOrdersTable(orders) {
       const tbody = document.getElementById('ordersTableBody');
       if (orders.length === 0) {
@@ -795,7 +757,6 @@
             </td>
             <td class="p-3 font-bold text-slate-900">$${o.totalPrice}</td>
 
-            <!-- 日期輸入框區 -->
             <td class="p-2 bg-slate-50/50">
               <input type="text" value="${o.orderDateOrder || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'orderDateOrder', this.value)"
                      class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
@@ -817,10 +778,7 @@
                      class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
             </td>
 
-            <!-- 內部狀態 Badge -->
             <td class="p-3">${getStatusBadge(o.internalStatus)}</td>
-
-            <!-- 外部公開狀態 Badge -->
             <td class="p-3">${getStatusBadge(o.publicStatus)}</td>
 
             <td class="p-3 text-center">
@@ -835,11 +793,8 @@
       tbody.innerHTML = html;
     }
 
-    // 內部狀態自動推導與更新
     function updateOrderDate(index, field, value) {
       mockOrders[index][field] = value.trim();
-      
-      // 自動推導內部狀態
       const o = mockOrders[index];
       if (o.cancelDate) o.internalStatus = "已取消";
       else if (o.pickupDate) o.internalStatus = "已完成";
@@ -861,7 +816,6 @@
       }
     }
 
-    // 智能批次配貨
     function executeBatchArrival() {
       const bookNo = document.getElementById('batchBookNo').value.trim();
       const arrivalDate = document.getElementById('batchArrivalDate').value.trim();
@@ -899,7 +853,6 @@
     }
 
     // ==================== TAB 3: 書單庫主檔 ====================
-
     function renderProductsTable(products) {
       const tbody = document.getElementById('productsTableBody');
       document.getElementById('productCount').innerText = products.length;
@@ -925,7 +878,6 @@
     }
 
     // ==================== TAB 4: 日誌 Logs ====================
-
     function addSampleLog(action, target, details) {
       const nowStr = new Date().toLocaleString('zh-HK');
       mockLogs.unshift({
@@ -957,13 +909,13 @@
 
     // ==================== GAS API 通訊工具 ====================
     function sendGasApi(payload, callback) {
-      if (!gasApiUrl) {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
         console.warn("未設定 GAS API URL，使用前端本地模擬運作。");
         setTimeout(() => callback({ status: "success", message: "（展示模式：本地模擬成功）" }), 300);
         return;
       }
 
-      fetch(gasApiUrl, {
+      fetch(GAS_WEB_APP_URL, {
         method: "POST",
         body: JSON.stringify(payload)
       })
