@@ -1,251 +1,181 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>學校訂書進度查詢系統</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>門巿訂書服務查詢</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f0f2f5; color: #333; padding: 20px; position: relative; min-height: 100vh; padding-bottom: 70px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        .header-box { text-align: center; margin-bottom: 20px; }
+        h1 { color: #0066cc; margin-bottom: 6px; font-size: 1.5rem; }
+        .subtitle { color: #666; font-size: 0.95rem; }
+        
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.95rem; color: #444; }
+        input, button { padding: 12px; font-size: 1rem; border: 1px solid #ddd; border-radius: 6px; outline: none; width: 100%; margin-bottom: 15px; }
+        button { background: #0066cc; color: white; border: none; cursor: pointer; transition: background 0.2s; font-weight: bold; margin-bottom: 0; }
+        button:hover { background: #0052a3; }
+
+        /* 訂單卡片樣式 */
+        .order-card { background: #fff; border: 1px solid #e1e4e8; border-left: 5px solid #0066cc; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .order-header { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; }
+        .order-id { font-weight: bold; color: #333; font-size: 1.05rem; }
+        
+        .order-items { list-style: none; margin-top: 8px; }
+        .item-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background: #f9f9f9; border-radius: 6px; margin-bottom: 8px; font-size: 0.95rem; gap: 10px; }
+        .item-left { flex-grow: 1; }
+        .item-name { color: #333; font-weight: 500; display: block; margin-bottom: 3px; }
+        
+        .item-qty { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; font-weight: bold; font-size: 0.8rem; padding: 1px 6px; border-radius: 4px; margin-left: 5px; }
+
+        .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; white-space: nowrap; }
+        .item-status { background: #e6f7ff; color: #0052a3; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .item-date { font-size: 0.75rem; color: #888; }
+        
+        .error-msg { color: #ff4d4f; font-weight: bold; text-align: center; margin-top: 10px; }
+
+        .footer-info { text-align: center; font-size: 0.85rem; color: #666; margin-top: 25px; line-height: 1.6; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e1e4e8; }
+        .footer-info a { color: #0066cc; text-decoration: none; font-weight: bold; }
+
+        .version-badge { position: fixed; bottom: 5px; left: 10px; font-size: 0.7rem; color: #aaa; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; border: 1px solid #eee; pointer-events: none; }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body>
 
-  <!-- 頂部 Header -->
-  <header class="bg-indigo-600 text-white shadow-md">
-    <div class="max-w-2xl mx-auto px-4 py-6 text-center">
-      <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-500 rounded-full mb-3 shadow-inner">
-        <i class="fa-solid font-bold fa-book-open text-2xl text-white"></i>
-      </div>
-      <h1 class="text-2xl font-bold tracking-tight">學校訂書服務平台</h1>
-      <p class="text-indigo-200 text-sm mt-1">即時查詢您的課本與教具到貨狀況</p>
-    </div>
-  </header>
-
-  <!-- 主要內容區 -->
-  <main class="flex-grow max-w-2xl w-full mx-auto px-4 py-8">
-    
-    <!-- 搜尋卡片 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
-      <form id="searchForm" onsubmit="handleSearch(event)" class="space-y-4">
-        <div>
-          <label for="phoneInput" class="block text-sm font-semibold text-slate-700 mb-2">
-            <i class="fa-solid fa-phone text-indigo-600 mr-1.5"></i>請輸入登記電話號碼
-          </label>
-          <div class="relative">
-            <input 
-              type="tel" 
-              id="phoneInput" 
-              placeholder="例如：91234567" 
-              required
-              pattern="[0-9]{8,11}"
-              class="w-full px-4 py-3.5 pl-11 text-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-lg tracking-wider"
-            >
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <i class="fa-solid fa-mobile-screen-button text-lg"></i>
-            </div>
-          </div>
+    <div class="container">
+        <div class="header-box">
+            <h1>📖 門巿訂書服務查詢</h1>
+            <p class="subtitle">即時查詢您的課本到貨狀況</p>
         </div>
-        
-        <button 
-          type="submit" 
-          id="submitBtn"
-          class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium py-3.5 rounded-xl shadow-md shadow-indigo-200 transition duration-150 flex items-center justify-center text-base"
-        >
-          <i class="fa-solid fa-magnifying-glass mr-2"></i>查詢訂單進度
-        </button>
-      </form>
+
+        <div class="card">
+            <label for="phoneInput">聯絡電話（全組電話）：</label>
+            <input type="text" id="phoneInput" placeholder="例如: 91234567" onkeypress="handleKey(event, 'search')">
+
+            <button onclick="searchOrders()">立即安全查詢</button>
+            <div id="resultArea"></div>
+        </div>
+
+        <!-- 溫馨提示與聯絡資訊 -->
+        <div class="footer-info">
+            <p>如有任何查詢，歡迎 WhatsApp 聯絡：<a href="https://wa.me/85266667788" target="_blank">6666 7788</a> 或親臨門巿。</p>
+            <p>到貨後我們會盡快更新狀態，謝謝您的耐心等候！</p>
+        </div>
     </div>
 
-    <!-- 載入中 Prompt -->
-    <div id="loadingState" class="hidden text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
-      <p class="text-slate-500 mt-4 text-sm font-medium">正在為您檢索最新進度，請稍候...</p>
-    </div>
+    <div class="version-badge">Ver: 20261031-003-exec</div>
 
-    <!-- 錯誤/提示訊息區 -->
-    <div id="messageState" class="hidden text-center py-10 px-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-      <div id="messageIcon" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"></div>
-      <h3 id="messageTitle" class="text-lg font-semibold text-slate-800"></h3>
-      <p id="messageText" class="text-slate-500 text-sm mt-1"></p>
-    </div>
-
-    <!-- 查詢結果列表區 -->
-    <div id="resultsArea" class="hidden space-y-6">
-      <div class="flex items-center justify-between px-1">
-        <h2 class="text-lg font-bold text-slate-800 flex items-center">
-          <i class="fa-solid fa-list-check text-indigo-600 mr-2"></i>您的訂購項目明細
-        </h2>
-        <span id="resultCount" class="text-xs font-semibold text-slate-500 bg-slate-200 px-2.5 py-1 rounded-full"></span>
-      </div>
-
-      <!-- 動態插入訂單卡片 -->
-      <div id="ordersList" class="space-y-4"></div>
-    </div>
-
-  </main>
-
-  <!-- 頁尾 -->
-  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-    <div class="max-w-2xl mx-auto px-4 space-y-1">
-      <p>© 2026 學校訂書服務中心．保留所有權利</p>
-      <p class="text-slate-400">外部狀態數據於每日午夜 00:00 統一更新同步</p>
-    </div>
-  </footer>
-
-  <!-- JavaScript 邏輯處理 -->
-  <script>
-    // ⚙️ 請在此處填入您在 Google Apps Script 部署取得的 Web App URL
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
-
-    async function handleSearch(e) {
-      e.preventDefault();
-      const phone = document.getElementById("phoneInput").value.trim();
-      
-      if (!phone) return;
-
-      if (GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
-        showMessage(
-          "fa-triangle-exclamation", 
-          "text-amber-600 bg-amber-100", 
-          "系統未完成設定", 
-          "請先在 index.html 檔案中填入正確的 Google Apps Script (GAS) API URL。"
-        );
-        return;
-      }
-
-      // 介面切換至 Loading
-      showLoading(true);
-      hideMessage();
-      document.getElementById("resultsArea").classList.add("hidden");
-
-      try {
-        const response = await fetch(`${GAS_WEB_APP_URL}?phone=${encodeURIComponent(phone)}`);
-        const result = await response.json();
-
-        showLoading(false);
-
-        if (result.status === "success") {
-          if (result.data && result.data.length > 0) {
-            renderOrders(result.data);
-          } else {
-            showMessage(
-              "fa-folder-open", 
-              "text-slate-600 bg-slate-100", 
-              "未找到相關訂單", 
-              `電話 ${phone} 目前查無任何生效中的訂購紀錄，請確認電話號碼是否正確。`
-            );
-          }
-        } else {
-          showMessage(
-            "fa-circle-xmark", 
-            "text-rose-600 bg-rose-100", 
-            "查詢失敗", 
-            result.message || "伺服器回應異常，請稍後再試。"
-          );
+    <script>
+        // 支援 Enter 鍵觸發查詢
+        function handleKey(e, action) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchOrders();
+            }
         }
-      } catch (err) {
-        showLoading(false);
-        showMessage(
-          "fa-wifi", 
-          "text-rose-600 bg-rose-100", 
-          "連線失敗", 
-          "無法連接至查詢伺服器，請檢查您的網絡連線。"
-        );
-      }
-    }
 
-    // 渲染訂單明細列表
-    function renderOrders(orders) {
-      const ordersList = document.getElementById("ordersList");
-      ordersList.innerHTML = "";
-      
-      document.getElementById("resultCount").textContent = `共 ${orders.length} 項產品`;
+        // 🌐 請在此處填入你 Google Apps Script 部署取得的 /exec 網頁應用程式 URL
+        const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL";
 
-      // 依據單號將資料分類組合（或直接卡片條列）
-      orders.forEach(item => {
-        const statusConfig = getStatusBadgeConfig(item.publicStatus);
-        
-        const card = document.createElement("div");
-        card.className = "bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3 transition hover:shadow-md";
-        
-        card.innerHTML = `
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <span class="text-xs font-semibold text-slate-400 block">單號</span>
-              <span class="text-base font-bold text-slate-800 font-mono">${item.orderId || 'N/A'}</span>
-            </div>
-            <div class="text-right">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.className}">
-                <i class="fa-solid ${statusConfig.icon} mr-1.5"></i>${item.publicStatus || '新訂單'}
-              </span>
-            </div>
-          </div>
+        async function searchOrders() {
+            let phoneInput = document.getElementById('phoneInput').value.trim();
+            let resultArea = document.getElementById('resultArea');
 
-          <div class="space-y-1.5">
-            <h4 class="font-bold text-slate-800 text-base flex items-start">
-              <i class="fa-solid fa-book text-indigo-500 mr-2 mt-1 text-sm"></i>
-              <span>${item.bookName || '未命名書籍'}</span>
-            </h4>
-            <div class="flex flex-wrap text-xs text-slate-500 gap-y-1 gap-x-4 pl-6">
-              <span><i class="fa-solid fa-[#fa-school] mr-1 text-slate-400"></i>學校：${item.school || '-'}</span>
-              <span><i class="fa-solid fa-layer-group mr-1 text-slate-400"></i>數量：<strong class="text-slate-700">${item.qty || 1}</strong></span>
-              <span><i class="fa-solid fa-dollar-sign mr-1 text-slate-400"></i>金額：<strong class="text-slate-700">$${item.totalPrice || 0}</strong></span>
-            </div>
-          </div>
+            if (phoneInput === "") {
+                resultArea.innerHTML = `<p class="error-msg">請完整填寫登記的聯絡電話！</p>`;
+                return;
+            }
 
-          <div class="pt-2 text-right">
-            <span class="text-[11px] text-slate-400">
-              進度發佈時間：${item.updateDate ? item.updateDate.substring(0, 16) : '每日午夜'}
-            </span>
-          </div>
-        `;
-        ordersList.appendChild(card);
-      });
+            if (GAS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec") {
+                resultArea.innerHTML = `<p class="error-msg">系統尚未設定 GAS API 網址，請先在程式碼中填入 /exec 網址。</p>`;
+                return;
+            }
 
-      document.getElementById("resultsArea").classList.remove("hidden");
-    }
+            resultArea.innerHTML = `<p style="text-align:center; color:#666; margin-top:10px;">安全驗證中，請稍候...</p>`;
 
-    // 狀態樣式標籤對應表
-    function getStatusBadgeConfig(status) {
-      switch (status) {
-        case "已到貨(可到店取)":
-          return { className: "bg-emerald-100 text-emerald-800 border border-emerald-200", icon: "fa-store" };
-        case "在訂中":
-          return { className: "bg-amber-100 text-amber-800 border border-amber-200", icon: "fa-truck-fast" };
-        case "已完成":
-          return { className: "bg-slate-100 text-slate-600 border border-slate-200", icon: "fa-circle-check" };
-        case "已取消":
-          return { className: "bg-rose-100 text-rose-700 border border-rose-200", icon: "fa-ban" };
-        default:
-          return { className: "bg-blue-100 text-blue-700 border border-blue-200", icon: "fa-clock" };
-      }
-    }
+            try {
+                // 呼叫 GAS 後端的 doGet(e)，帶入 phone 參數
+                let response = await fetch(`${GAS_WEB_APP_URL}?phone=${encodeURIComponent(phoneInput)}`);
+                let result = await response.json();
 
-    function showLoading(show) {
-      document.getElementById("loadingState").classList.toggle("hidden", !show);
-    }
+                if (result.status === "success") {
+                    let orders = result.data;
 
-    function showMessage(iconClass, colorClass, title, text) {
-      const msgArea = document.getElementById("messageState");
-      const iconEl = document.getElementById("messageIcon");
-      
-      iconEl.className = `w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${colorClass}`;
-      iconEl.innerHTML = `<i class="fa-solid ${iconClass} text-xl"></i>`;
-      
-      document.getElementById("messageTitle").textContent = title;
-      document.getElementById("messageText").textContent = text;
-      
-      msgArea.classList.remove("hidden");
-    }
+                    if (!orders || orders.length === 0) {
+                        resultArea.innerHTML = `<p class="error-msg">搵唔到符合呢個電話嘅記錄，請確認電話號碼是否正確。</p>`;
+                        return;
+                    }
 
-    function hideMessage() {
-      document.getElementById("messageState").classList.add("hidden");
-    }
-  </script>
+                    // 將回傳的訂單依照單號 (orderId) 分組顯示
+                    let ordersMap = {};
+                    orders.forEach(item => {
+                        let orderId = item.orderId || "未分類訂單";
+                        if (!ordersMap[orderId]) {
+                            ordersMap[orderId] = {
+                                school: item.school,
+                                items: []
+                            };
+                        }
+                        ordersMap[orderId].items.push({
+                            bookName: item.bookName,
+                            qty: item.qty,
+                            totalPrice: item.totalPrice,
+                            publicStatus: item.publicStatus,
+                            updateDate: item.updateDate
+                        });
+                    });
+
+                    let html = `<h3 style="margin: 15px 0 10px 0; font-size:1.1rem; color:#444; text-align:left;">為你找到以下訂單：</h3>`;
+                    
+                    for (let orderId in ordersMap) {
+                        let ord = ordersMap[orderId];
+                        
+                        let itemsHtml = ord.items.map(i => {
+                            let qtyDisplay = `<span class="item-qty">x${i.qty} 件</span>`;
+                            let dateDisplay = i.updateDate ? `<span class="item-date">更新: ${i.updateDate.substring(0, 10)}</span>` : '';
+                            
+                            return `
+                                <li class="item-row">
+                                    <div class="item-left">
+                                        <span class="item-name">${i.bookName} ${qtyDisplay}</span>
+                                        <span style="font-size:0.8rem; color:#666;">折實價: $${i.totalPrice}</span>
+                                    </div>
+                                    <div class="item-right">
+                                        <span class="item-status">${i.publicStatus}</span>
+                                        ${dateDisplay}
+                                    </div>
+                                </li>
+                            `;
+                        }).join('');
+
+                        html += `
+                            <div class="order-card">
+                                <div class="order-header">
+                                    <span class="order-id">🔖 訂單編號: ${orderId}</span>
+                                </div>
+                                <p style="font-size:0.9rem; color:#666; margin-bottom:8px;">🏫 學校：${ord.school || '門市訂單'}</p>
+                                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:4px;">🛒 購買明細：</p>
+                                <ul class="order-items">
+                                    ${itemsHtml}
+                                </ul>
+                            </div>
+                        `;
+                    }
+
+                    resultArea.innerHTML = html;
+
+                } else {
+                    resultArea.innerHTML = `<p class="error-msg">${result.message || "查詢失敗，請稍後再試。"}</p>`;
+                }
+
+            } catch (err) {
+                resultArea.innerHTML = `<p class="error-msg">連線伺服器失敗，請檢查網絡或 API 網址。</p>`;
+            }
+        }
+    </script>
 </body>
 </html>
