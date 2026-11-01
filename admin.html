@@ -8,7 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Inter Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -22,7 +21,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
 
-  <!-- ==================== 1. 登入介面 (Login Modal) ==================== -->
+  <!-- 1. 登入介面 -->
   <div id="loginOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
       <div class="text-center mb-6">
@@ -55,187 +54,171 @@
     </div>
   </div>
 
-  <!-- ==================== 2. 主系統包裝 (Main App UI) ==================== -->
+  <!-- 2. 主頁面介面 -->
   <div id="appUI" class="hidden flex-1 flex flex-col">
-    
-    <!-- 頂部導航列 (Navbar) -->
     <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        
         <div class="flex items-center space-x-3">
           <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-lg font-bold shadow-md shadow-blue-500/30">
             <i class="fa-solid fa-book-open"></i>
           </div>
           <div>
-            <h1 class="font-bold text-base tracking-wide leading-none">學校訂书 ERP</h1>
-            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN PANEL v2.0</span>
+            <h1 class="font-bold text-base tracking-wide leading-none">門巿學校訂書 ERP</h1>
+            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v2.5</span>
           </div>
         </div>
 
-        <!-- 登出按鈕 -->
         <div class="flex items-center space-x-3">
           <button onclick="handleLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span>登出</span>
           </button>
         </div>
-
       </div>
 
-      <!-- 頁籤導航欄 (Tab Nav) -->
+      <!-- Tab 導航 -->
       <div class="bg-slate-800/80 border-t border-slate-700/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 overflow-x-auto no-scrollbar">
-          
-          <button onclick="switchTab('drafts')" id="tabBtn-drafts" 
-                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap active">
+          <button onclick="switchTab('drafts')" id="tabBtn-drafts" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap active">
             <i class="fa-solid fa-file-pen"></i>
             <span>1. 新開訂單 / 草稿箱</span>
             <span id="draftBadge" class="ml-1 bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full border border-amber-500/30">0</span>
           </button>
 
-          <button onclick="switchTab('orders')" id="tabBtn-orders" 
-                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+          <button onclick="switchTab('orders')" id="tabBtn-orders" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
             <i class="fa-solid fa-truck-ramp-box"></i>
             <span>2. 訂單進度與智能配貨</span>
           </button>
 
-          <button onclick="switchTab('products')" id="tabBtn-products" 
-                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+          <button onclick="switchTab('products')" id="tabBtn-products" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
             <i class="fa-solid fa-book"></i>
             <span>3. 書單庫主檔</span>
           </button>
 
-          <button onclick="switchTab('logs')" id="tabBtn-logs" 
-                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+          <button onclick="switchTab('logs')" id="tabBtn-logs" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
             <i class="fa-solid fa-clock-rotate-left"></i>
             <span>4. 操作日誌 Logs</span>
           </button>
-
         </div>
       </div>
     </header>
 
-    <!-- 主體頁面內容 (Main Body) -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
 
-      <!-- ==================== TAB 1: 新開訂單 / 草稿箱 ==================== -->
+      <!-- TAB 1: 新開訂單 / 草稿箱 -->
       <section id="tab-drafts" class="tab-content active space-y-6">
         
+        <!-- 頂部區塊：訂單與客戶基本設定 (按新要求排版) -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
               <span class="w-2 h-5 bg-blue-600 rounded-full inline-block"></span>
-              <span>實體三聯單與客戶資料</span>
+              <span>1. 訂單基本資訊與學校選取</span>
             </h3>
             <span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md font-mono">開單緩衝區 (Draft)</span>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 1) 落單日期 (調整到最頂) -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">實體單號 (三聯單) <span class="text-red-500">*</span></label>
-              <input type="text" id="draftOrderId" placeholder="例: A-1024" 
+              <label class="block text-xs font-bold text-slate-700 mb-1">落單日期 (YYMMDD) <span class="text-red-500">*</span></label>
+              <input type="text" id="draftOrderDate" placeholder="例如: 261101" onkeydown="handleEnterNext(event, 'selectBranch')"
                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
             </div>
 
+            <!-- 4) 選擇門市 -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">落單日期 (YYMMDD)</label>
-              <input type="text" id="draftOrderDate" placeholder="例: 261031" 
+              <label class="block text-xs font-bold text-slate-700 mb-1">門市 <span class="text-red-500">*</span></label>
+              <select id="selectBranch" onchange="onBranchChange()" onkeydown="handleEnterNext(event, 'selectSchool')"
+                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+                <option value="">-- 請選擇門市 --</option>
+              </select>
+            </div>
+
+            <!-- 5) 選擇學校 (連動) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">學校 <span class="text-red-500">*</span></label>
+              <select id="selectSchool" onchange="onSchoolChange()" onkeydown="handleEnterNext(event, 'selectGrade')"
+                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+                <option value="">-- 請先選擇門市 --</option>
+              </select>
+            </div>
+
+            <!-- 6) 書單年級 (連動) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">書單年級 <span class="text-red-500">*</span></label>
+              <select id="selectGrade" onchange="onGradeChange()" onkeydown="handleEnterNext(event, 'draftOrderId')"
+                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+                <option value="">-- 請先選擇學校 --</option>
+              </select>
+            </div>
+
+            <!-- 2) 實體單號 (限定10字) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">實體單號 (必須剛好10位) <span class="text-red-500">*</span></label>
+              <input type="text" id="draftOrderId" maxlength="10" placeholder="例: A123456789" onkeydown="handleEnterNext(event, 'draftCustomerName')"
                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
             </div>
 
+            <!-- 客人姓名 -->
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">客人姓名 <span class="text-red-500">*</span></label>
-              <input type="text" id="draftCustomerName" placeholder="例: 陳大文" 
+              <input type="text" id="draftCustomerName" placeholder="例如: 陳大文" onkeydown="handleEnterNext(event, 'draftPhone')"
                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
             </div>
 
+            <!-- 3) 聯絡電話 -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">聯絡電話 <span class="text-red-500">*</span></label>
-              <input type="text" id="draftPhone" placeholder="例: 91234567" 
+              <label class="block text-xs font-bold text-slate-700 mb-1">聯絡電話 (基本8位) <span class="text-red-500">*</span></label>
+              <input type="text" id="draftPhone" placeholder="例如: 91234567" onkeydown="handleEnterNext(event, 'seq_input_0')"
                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
             </div>
           </div>
         </div>
 
+        <!-- 7) 預留 50 個輸入序號位置 (快速輸入網格) -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-3">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
               <span class="w-2 h-5 bg-emerald-500 rounded-full inline-block"></span>
-              <span>新增訂購書本 (輸入序號自動帶出)</span>
+              <span>2. 快速訂購明細 (序號輸入區)</span>
             </h3>
-            
-            <div class="flex items-center space-x-2">
-              <span class="text-xs text-slate-500 font-medium">整批統一折扣:</span>
-              <input type="number" step="0.01" id="bulkDiscountInput" placeholder="0.80" 
-                     class="w-20 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-center outline-none">
-              <button onclick="applyBulkDiscount()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded-lg transition-all">
+
+            <!-- 8) 批次折扣設定 (最多88折) -->
+            <div class="flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <span class="text-xs text-slate-600 font-bold">批次折扣:</span>
+              <input type="number" step="0.01" id="bulkDiscountInput" placeholder="0.88" 
+                     class="w-20 px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-mono text-center outline-none">
+              <button onclick="applyBulkDiscountLimit()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white font-medium px-3 py-1 rounded-lg transition-all">
                 套用批次
               </button>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end mb-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
-            <div class="md:col-span-3">
-              <label class="block text-xs font-bold text-slate-600 mb-1">選擇學校</label>
-              <select id="quickSchoolSelect" onchange="filterProductsBySchool()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none">
-                <option value="">-- 請選擇學校 --</option>
-                <option value="ABC小學">ABC小學</option>
-                <option value="XYZ中學">XYZ中學</option>
-              </select>
-            </div>
-
-            <div class="md:col-span-2">
-              <label class="block text-xs font-bold text-slate-600 mb-1">書單序號 (打 1, 2, 3)</label>
-              <input type="number" id="quickSeqNo" placeholder="打數字 1" oninput="autoFillBySeq()" 
-                     class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-blue-600 outline-none">
-            </div>
-
-            <div class="md:col-span-4">
-              <label class="block text-xs font-bold text-slate-600 mb-1">自動帶出書名</label>
-              <input type="text" id="quickBookTitle" readonly placeholder="輸入序號後自動帶出" 
-                     class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-600 outline-none">
-            </div>
-
-            <div class="md:col-span-2">
-              <label class="block text-xs font-bold text-slate-600 mb-1">定價 / 預設價</label>
-              <input type="text" id="quickPrice" readonly placeholder="$0" 
-                     class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm font-mono text-slate-600 outline-none">
-            </div>
-
-            <div class="md:col-span-1">
-              <button onclick="addBookToDraft()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition-all shadow-md shadow-emerald-600/20">
-                <i class="fa-solid fa-plus"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto rounded-xl border border-slate-200">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead class="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
+          <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-[500px] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-800 text-slate-200 font-semibold sticky top-0 z-10">
                 <tr>
-                  <th class="p-3">序號</th>
-                  <th class="p-3">學校</th>
-                  <th class="p-3">書號</th>
-                  <th class="p-3">書名</th>
-                  <th class="p-3">原定價</th>
-                  <th class="p-3">折扣 (例如 0.8)</th>
-                  <th class="p-3">折實單價</th>
-                  <th class="p-3">數量</th>
-                  <th class="p-3">小計</th>
-                  <th class="p-3 text-center">操作</th>
+                  <th class="p-2.5 w-12 text-center">#</th>
+                  <th class="p-2.5 w-24">序號 (Seq)</th>
+                  <th class="p-2.5">書名 / 產品名稱</th>
+                  <th class="p-2.5 w-20 text-right">原定價</th>
+                  <th class="p-2.5 w-24 text-center">折扣 (最低0.7)</th>
+                  <th class="p-2.5 w-24 text-right">折實單價</th>
+                  <th class="p-2.5 w-20 text-center">數量</th>
+                  <th class="p-2.5 w-24 text-right">小計</th>
                 </tr>
               </thead>
-              <tbody id="draftItemsTable" class="divide-y divide-slate-100 font-mono text-xs">
-                <tr>
-                  <td colspan="10" class="p-8 text-center text-slate-400 font-sans">目前草稿暫無書籍，請於上方選擇學校並輸入序號加入。</td>
-                </tr>
+              <tbody id="quickGridBody" class="divide-y divide-slate-100 font-mono">
+                <!-- JavaScript 動態生成 50 列 -->
               </tbody>
             </table>
           </div>
 
+          <!-- 底部統計與備註 -->
           <div class="mt-4 flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-4">
             <div class="w-full sm:w-1/2">
-              <input type="text" id="draftRemark" placeholder="內部備忘 / 劃花原因 (例: 劃花廢單 / 客人付訂$100)" 
+              <input type="text" id="draftRemark" placeholder="內部備忘 / 劃花原因 (例: 客人付訂$100)" 
                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none">
             </div>
             
@@ -248,6 +231,7 @@
           </div>
         </div>
 
+        <!-- 按鈕區 -->
         <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
           <button onclick="saveDraftAction()" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center space-x-2 text-sm">
             <i class="fa-solid fa-floppy-disk"></i>
@@ -267,9 +251,8 @@
 
       </section>
 
-      <!-- ==================== TAB 2: 訂單進度管理與智能配貨 ==================== -->
+      <!-- TAB 2: 訂單進度管理與智能配貨 -->
       <section id="tab-orders" class="tab-content space-y-6">
-        
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -279,23 +262,17 @@
 
             <div class="flex items-center space-x-2 bg-indigo-50/70 p-2 rounded-xl border border-indigo-100">
               <span class="text-xs font-bold text-indigo-900 whitespace-nowrap pl-1"><i class="fa-solid fa-bolt text-amber-500"></i> 一鍵批次到貨:</span>
-              <input type="text" id="batchBookNo" placeholder="輸入書號 BK-001" 
-                     class="w-32 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-mono outline-none">
-              <input type="text" id="batchArrivalDate" placeholder="261031" 
-                     class="w-20 px-2 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-mono text-center outline-none">
-              <button onclick="executeBatchArrival()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-1 rounded-lg transition-all shadow-sm">
-                批次配貨
-              </button>
+              <input type="text" id="batchBookNo" placeholder="輸入書號 BK-001" class="w-32 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-mono outline-none">
+              <input type="text" id="batchArrivalDate" placeholder="261101" class="w-20 px-2 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-mono text-center outline-none">
+              <button onclick="executeBatchArrival()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-1 rounded-lg transition-all shadow-sm">批次配貨</button>
             </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="relative">
-              <input type="text" id="orderSearchInput" onkeyup="filterOrdersTable()" placeholder="搜尋單號 (A-1024) 或 電話..." 
-                     class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" id="orderSearchInput" onkeyup="filterOrdersTable()" placeholder="搜尋單號 (A123456789) 或 電話..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
             </div>
-
             <div>
               <select id="statusFilterSelect" onchange="filterOrdersTable()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
                 <option value="">-- 全部內部狀態 --</option>
@@ -306,9 +283,8 @@
                 <option value="已取消">已取消</option>
               </select>
             </div>
-
             <div class="text-right flex items-center justify-end">
-              <button onclick="loadOrdersFromSheet()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl transition-all border border-slate-200 flex items-center space-x-1">
+              <button onclick="fetchAllDataFromGas()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl transition-all border border-slate-200 flex items-center space-x-1">
                 <i class="fa-solid fa-rotate text-slate-500"></i>
                 <span>刷新 Orders 大表</span>
               </button>
@@ -332,20 +308,18 @@
                   <th class="p-3 bg-slate-800 text-blue-300">通知日</th>
                   <th class="p-3 bg-slate-800 text-purple-300">提貨日</th>
                   <th class="p-3 bg-slate-800 text-rose-300">取消日</th>
-                  <th class="p-3">內部狀態 (Real-time)</th>
+                  <th class="p-3">內部狀態</th>
                   <th class="p-3">對外公開狀態</th>
                   <th class="p-3 text-center">操作</th>
                 </tr>
               </thead>
-              <tbody id="ordersTableBody" class="divide-y divide-slate-100 font-mono">
-              </tbody>
+              <tbody id="ordersTableBody" class="divide-y divide-slate-100 font-mono"></tbody>
             </table>
           </div>
         </div>
-
       </section>
 
-      <!-- ==================== TAB 3: 書單庫主檔 (Products) ==================== -->
+      <!-- TAB 3: 書單庫主檔 -->
       <section id="tab-products" class="tab-content space-y-6">
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -372,14 +346,13 @@
                   <th class="p-3">供應商</th>
                 </tr>
               </thead>
-              <tbody id="productsTableBody" class="divide-y divide-slate-100 font-mono">
-              </tbody>
+              <tbody id="productsTableBody" class="divide-y divide-slate-100 font-mono"></tbody>
             </table>
           </div>
         </div>
       </section>
 
-      <!-- ==================== TAB 4: 操作日誌 Logs ==================== -->
+      <!-- TAB 4: 操作日誌 Logs -->
       <section id="tab-logs" class="tab-content space-y-6">
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -401,8 +374,7 @@
                   <th class="p-3">詳細說明 (Message)</th>
                 </tr>
               </thead>
-              <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono">
-              </tbody>
+              <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono"></tbody>
             </table>
           </div>
         </div>
@@ -410,72 +382,76 @@
 
     </main>
 
-    <!-- 頁尾Footer -->
     <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-400">
       學校訂書 ERP 系統 &copy; 2026 Internal Administration Console
     </footer>
-
   </div>
 
-  <!-- ==================== Toast 全局通知組件 ==================== -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
-  <!-- ==================== JavaScript 核心前端邏輯 ==================== -->
+  <!-- JavaScript 核心邏輯 -->
   <script>
-    // 🌐 全局系統狀態與 API 設定
     const SYSTEM_PIN = "admin888";
     
-    // 🔗 已經直接寫死你的 GAS /exec 網址（請將下方字串替換成你實際的部署網址）
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
+    // 🌐 請在此處填入你的 GAS /exec 網址
+    const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL";
 
-    // 模擬產品庫 (若 GAS 未設定時之備用資料)
+    // 預設/備用產品資料
     let mockProducts = [
-      { branch: "灣仔店", school: "ABC小學", grade: "小一", listCode: "SL-P1", seqNo: 1, bookNo: "BK-001", bookName: "中文地道補充練習 1A", price: 100, defaultPrice: 80, publisher: "培生", subject: "中文", supplier: "聯合發行" },
-      { branch: "灣仔店", school: "ABC小學", grade: "小一", listCode: "SL-P1", seqNo: 2, bookNo: "BK-002", bookName: "Primary English Grammar 1A", price: 120, defaultPrice: 96, publisher: "朗文", subject: "英文", supplier: "培生" },
-      { branch: "灣仔店", school: "ABC小學", grade: "小一", listCode: "SL-P1", seqNo: 3, bookNo: "BK-003", bookName: "小學數學思維訓練 1上", price: 90, defaultPrice: 72, publisher: "牛津", subject: "數學", supplier: "牛津" },
-      { branch: "沙田店", school: "XYZ中學", grade: "中四", listCode: "SL-S4", seqNo: 1, bookNo: "BK-101", bookName: "高中香港歷史專題 1", price: 200, defaultPrice: 160, publisher: "現代", subject: "歷史", supplier: "現代" }
+      { branch: "灣仔店", school: "ABC小學", grade: "小一", seqNo: 1, bookNo: "BK-001", bookName: "英文常規課本 1A", price: 150, defaultPrice: 120 },
+      { branch: "灣仔店", school: "ABC小學", grade: "小一", seqNo: 2, bookNo: "BK-002", bookName: "英文補充練習 1A", price: 80, defaultPrice: 64 },
+      { branch: "灣仔店", school: "ABC小學", grade: "小一", seqNo: 3, bookNo: "BK-003", bookName: "數學能力訓練 1A", price: 120, defaultPrice: 96 },
+      { branch: "沙田店", school: "培正小學", grade: "小二", seqNo: 1, bookNo: "BK-010", bookName: "中文綜合教材 2B", price: 180, defaultPrice: 153 }
     ];
 
-    let currentDraftItems = [];
+    let gridRowsData = new Array(50).fill(null); // 儲存 50 列快配區的數據
     let mockOrders = [];
     let mockLogs = [];
 
-    // 初始化載入
     window.onload = function() {
+      // 預設落單日期 YYMMDD
       const now = new Date();
       const yymmdd = String(now.getFullYear()).slice(-2) + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
       document.getElementById('draftOrderDate').value = yymmdd;
       document.getElementById('batchArrivalDate').value = yymmdd;
-      
+
+      init50GridRows();
       renderProductsTable(mockProducts);
+      populateBranchDropdown();
       addSampleLog("系統初始化", "SYSTEM", "後台介面載入完成");
     };
 
-// 🔑 登入驗證處理
+    // 按 Enter 跳下一格
+    function handleEnterNext(e, nextId) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const nextElem = document.getElementById(nextId);
+        if (nextElem) nextElem.focus();
+      }
+    }
+
+    // 🔑 登入與資料同步
     function handleLogin(e) {
       e.preventDefault();
-      const pin = document.getElementById('loginPin').value;
-      if (pin === SYSTEM_PIN) {
+      if (document.getElementById('loginPin').value === SYSTEM_PIN) {
         document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('appUI').classList.remove('hidden');
         showToast("登入成功！正在從 Google 試算表同步資料...", "success");
-        
-        // 🚀 登入成功後，自動向 GAS 請求試算表中的真實資料！
         fetchAllDataFromGas();
-        
       } else {
         document.getElementById('loginError').classList.remove('hidden');
       }
     }
 
-    // 🌐 從 GAS 抓取真實試算表資料 (Products 書單庫)
-    function fetchAllDataFromGas() {
-      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
-        showToast("尚未設定正確的 GAS 網址，目前使用本地模擬數據", "warning");
-        return;
-      }
+    function handleLogout() {
+      document.getElementById('appUI').classList.add('hidden');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('loginPin').value = '';
+    }
 
-      // 發送請求抓取 Products 分頁資料
+    function fetchAllDataFromGas() {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") return;
+
       fetch(GAS_WEB_APP_URL, {
         method: "POST",
         body: JSON.stringify({ action: "getProducts", schoolName: "" })
@@ -483,236 +459,357 @@
       .then(res => res.json())
       .then(data => {
         if (data.status === "success" && data.data && data.data.length > 0) {
-          mockProducts = data.data; // 將資料替換為試算表真實數據
+          mockProducts = data.data;
           renderProductsTable(mockProducts);
-          populateSchoolDropdown(); // 自動更新開單時的學校下拉選單
-          showToast("已成功同步試算表書單庫！", "success");
-        } else {
-          showToast("試算表 Products 暫無資料", "warning");
+          populateBranchDropdown();
+          showToast("已同步試算表 Products 書單資料！", "success");
         }
       })
-      .catch(err => {
-        console.error("讀取 Products 失敗:", err);
-        showToast("同步 Products 失敗，請檢查網路", "error");
-      });
+      .catch(err => console.error("同步失敗:", err));
     }
 
-    // 動態更新開單選單中的學校選項
-    function populateSchoolDropdown() {
-      const select = document.getElementById('quickSchoolSelect');
-      const schools = [...new Set(mockProducts.map(p => p.school))].filter(Boolean);
-      
-      let html = '<option value="">-- 請選擇學校 --</option>';
-      schools.forEach(s => {
-        html += `<option value="${s}">${s}</option>`;
-      });
-      select.innerHTML = html;
+    // 門市 -> 學校 -> 年級 三級連動
+    function populateBranchDropdown() {
+      const branches = [...new Set(mockProducts.map(p => p.branch))].filter(Boolean);
+      const branchSelect = document.getElementById('selectBranch');
+      branchSelect.innerHTML = '<option value="">-- 請選擇門市 --</option>' + 
+        branches.map(b => `<option value="${b}">${b}</option>`).join('');
     }
 
-    function handleLogout() {
-      document.getElementById('appUI').classList.add('hidden');
-      document.getElementById('loginOverlay').classList.remove('hidden');
-      document.getElementById('loginPin').value = '';
-      showToast("已安全登出", "info");
-    }
+    function onBranchChange() {
+      const branch = document.getElementById('selectBranch').value;
+      const schoolSelect = document.getElementById('selectSchool');
+      const gradeSelect = document.getElementById('selectGrade');
+      gradeSelect.innerHTML = '<option value="">-- 請先選擇學校 --</option>';
 
-    // 📑 頁籤切換
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active', 'border-blue-500', 'text-white');
-        btn.classList.add('border-transparent', 'text-slate-400');
-      });
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
-      const activeContent = document.getElementById(`tab-${tabId}`);
-      
-      if (activeBtn && activeContent) {
-        activeBtn.classList.add('active', 'border-blue-500', 'text-white');
-        activeBtn.classList.remove('border-transparent', 'text-slate-400');
-        activeContent.classList.add('active');
-      }
-    }
-
-    // ==================== TAB 1: 新開訂單 / 草稿箱邏輯 ====================
-    function autoFillBySeq() {
-      const school = document.getElementById('quickSchoolSelect').value;
-      const seqNo = parseInt(document.getElementById('quickSeqNo').value);
-      
-      if (!school || isNaN(seqNo)) {
-        document.getElementById('quickBookTitle').value = "";
-        document.getElementById('quickPrice').value = "";
+      if (!branch) {
+        schoolSelect.innerHTML = '<option value="">-- 請先選擇門市 --</option>';
         return;
       }
 
-      const found = mockProducts.find(p => p.school === school && p.seqNo === seqNo);
-      if (found) {
-        document.getElementById('quickBookTitle').value = found.bookName;
-        document.getElementById('quickPrice').value = `$${found.price} (折實 $${found.defaultPrice})`;
-      } else {
-        document.getElementById('quickBookTitle').value = "找不到該序號書籍";
-        document.getElementById('quickPrice').value = "";
-      }
+      const schools = [...new Set(mockProducts.filter(p => p.branch === branch).map(p => p.school))].filter(Boolean);
+      schoolSelect.innerHTML = '<option value="">-- 請選擇學校 --</option>' + 
+        schools.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
-    function addBookToDraft() {
-      const school = document.getElementById('quickSchoolSelect').value;
-      const seqNo = parseInt(document.getElementById('quickSeqNo').value);
-      
-      if (!school || isNaN(seqNo)) {
-        showToast("請先選擇學校及填寫正確的書單序號", "warning");
+    function onSchoolChange() {
+      const branch = document.getElementById('selectBranch').value;
+      const school = document.getElementById('selectSchool').value;
+      const gradeSelect = document.getElementById('selectGrade');
+
+      if (!school) {
+        gradeSelect.innerHTML = '<option value="">-- 請先選擇學校 --</option>';
         return;
       }
 
-      const found = mockProducts.find(p => p.school === school && p.seqNo === seqNo);
-      if (!found) {
-        showToast("找不到對應書籍！", "error");
-        return;
-      }
-
-      const defaultDiscount = 0.8;
-      const discountPrice = Math.round(found.price * defaultDiscount);
-
-      currentDraftItems.push({
-        school: found.school,
-        seqNo: found.seqNo,
-        bookNo: found.bookNo,
-        bookName: found.bookName,
-        price: found.price,
-        discount: defaultDiscount,
-        discountPrice: discountPrice,
-        qty: 1,
-        totalPrice: discountPrice * 1
-      });
-
-      renderDraftTable();
-      document.getElementById('quickSeqNo').value = "";
-      document.getElementById('quickBookTitle').value = "";
-      document.getElementById('quickPrice').value = "";
-      showToast(`已加入: ${found.bookName}`, "success");
+      const grades = [...new Set(mockProducts.filter(p => p.branch === branch && p.school === school).map(p => p.grade))].filter(Boolean);
+      gradeSelect.innerHTML = '<option value="">-- 請選擇年級 --</option>' + 
+        grades.map(g => `<option value="${g}">${g}</option>`).join('');
     }
 
-    function renderDraftTable() {
-      const tbody = document.getElementById('draftItemsTable');
-      if (currentDraftItems.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 font-sans">目前草稿暫無書籍，請於上方選擇學校並輸入序號加入。</td></tr>`;
-        document.getElementById('draftTotalSummary').innerText = "0 本 / $0";
-        document.getElementById('draftBadge').innerText = "0";
-        return;
-      }
+    function onGradeChange() {
+      // 切換年級時清空當前 50 列輸入框，重新匹配
+      init50GridRows();
+      showToast("已鎖定年級，請於下方輸入序號快速匹配！", "info");
+    }
 
+    // 初始化 50 列快配網格
+    function init50GridRows() {
+      const tbody = document.getElementById('quickGridBody');
+      gridRowsData = new Array(50).fill(null);
       let html = "";
-      let totalQty = 0;
-      let totalPriceSum = 0;
 
-      currentDraftItems.forEach((item, index) => {
-        totalQty += item.qty;
-        totalPriceSum += item.totalPrice;
-
+      for (let i = 0; i < 50; i++) {
         html += `
-          <tr class="hover:bg-slate-50">
-            <td class="p-3 font-bold">${item.seqNo}</td>
-            <td class="p-3">${item.school}</td>
-            <td class="p-3 font-mono text-slate-500">${item.bookNo}</td>
-            <td class="p-3 font-sans font-medium text-slate-800">${item.bookName}</td>
-            <td class="p-3 text-slate-400">$${item.price}</td>
-            <td class="p-3">
-              <input type="number" step="0.01" value="${item.discount}" onchange="updateDraftItemDiscount(${index}, this.value)" 
+          <tr id="gridRow_${i}" class="hover:bg-slate-50 border-b border-slate-100">
+            <td class="p-2 text-center text-slate-400 text-[11px] font-sans">${i + 1}</td>
+            <td class="p-2">
+              <input type="number" id="seq_input_${i}" oninput="onSeqInputChange(${i})" onkeydown="handleSeqKeyDown(event, ${i})" placeholder="序號" 
+                     class="w-full px-2 py-1 bg-white border border-slate-200 rounded text-center font-bold text-blue-600 outline-none focus:ring-1 focus:ring-blue-500">
+            </td>
+            <td class="p-2 font-sans text-slate-700" id="bookName_${i}">-</td>
+            <td class="p-2 text-right text-slate-400" id="price_${i}">$0</td>
+            <td class="p-2 text-center">
+              <input type="number" step="0.01" id="discount_${i}" onchange="onDiscountChange(${i})" placeholder="0.8" disabled
                      class="w-16 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none">
             </td>
-            <td class="p-3 text-blue-600">$${item.discountPrice}</td>
-            <td class="p-3">
-              <input type="number" min="1" value="${item.qty}" onchange="updateDraftItemQty(${index}, this.value)" 
-                     class="w-14 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none">
+            <td class="p-2 text-right font-bold text-blue-600" id="discPrice_${i}">$0</td>
+            <td class="p-2 text-center">
+              <input type="number" min="1" id="qty_${i}" value="1" onchange="onQtyChange(${i})" disabled
+                     class="w-12 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none">
             </td>
-            <td class="p-3 font-bold text-slate-900">$${item.totalPrice}</td>
-            <td class="p-3 text-center">
-              <button onclick="removeDraftItem(${index})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
-            </td>
+            <td class="p-2 text-right font-bold text-slate-900" id="total_${i}">$0</td>
           </tr>
         `;
-      });
-
+      }
       tbody.innerHTML = html;
-      document.getElementById('draftTotalSummary').innerText = `${totalQty} 本 / $${totalPriceSum}`;
-      document.getElementById('draftBadge').innerText = currentDraftItems.length;
+      updateTotalSummary();
     }
 
-    function updateDraftItemDiscount(index, val) {
-      const discount = parseFloat(val) || 1;
-      currentDraftItems[index].discount = discount;
-      currentDraftItems[index].discountPrice = Math.round(currentDraftItems[index].price * discount);
-      currentDraftItems[index].totalPrice = currentDraftItems[index].discountPrice * currentDraftItems[index].qty;
-      renderDraftTable();
-    }
+    // 當輸入序號時
+    function onSeqInputChange(index) {
+      const branch = document.getElementById('selectBranch').value;
+      const school = document.getElementById('selectSchool').value;
+      const grade = document.getElementById('selectGrade').value;
+      const seqVal = parseInt(document.getElementById(`seq_input_${index}`).value);
 
-    function updateDraftItemQty(index, val) {
-      const qty = parseInt(val) || 1;
-      currentDraftItems[index].qty = qty;
-      currentDraftItems[index].totalPrice = currentDraftItems[index].discountPrice * qty;
-      renderDraftTable();
-    }
-
-    function removeDraftItem(index) {
-      currentDraftItems.splice(index, 1);
-      renderDraftTable();
-    }
-
-    function applyBulkDiscount() {
-      const bulkDiscount = parseFloat(document.getElementById('bulkDiscountInput').value);
-      if (isNaN(bulkDiscount)) {
-        showToast("請輸入有效的批次折扣數值 (例如 0.8)", "warning");
+      if (!branch || !school || !grade) {
+        showToast("請先選擇【門市、學校、年級】！", "warning");
+        document.getElementById(`seq_input_${index}`).value = "";
         return;
       }
-      currentDraftItems.forEach(item => {
-        item.discount = bulkDiscount;
-        item.discountPrice = Math.round(item.price * bulkDiscount);
-        item.totalPrice = item.discountPrice * item.qty;
-      });
-      renderDraftTable();
-      showToast(`已批次將所有草稿套用 ${bulkDiscount} 折扣`, "success");
+
+      if (isNaN(seqVal)) {
+        clearRowData(index);
+        updateTotalSummary();
+        return;
+      }
+
+      // 搜尋匹配書籍
+      const found = mockProducts.find(p => p.branch === branch && p.school === school && p.grade === grade && parseInt(p.seqNo) === seqVal);
+
+      if (found) {
+        // 計算預設折扣比率
+        const defaultRatio = found.price > 0 ? (found.defaultPrice / found.price).toFixed(2) : 0.8;
+
+        gridRowsData[index] = {
+          seqNo: found.seqNo,
+          bookNo: found.bookNo,
+          bookName: found.bookName,
+          price: found.price,
+          discount: parseFloat(defaultRatio),
+          discountPrice: found.defaultPrice,
+          qty: 1,
+          totalPrice: found.defaultPrice
+        };
+
+        // 更新 UI
+        document.getElementById(`bookName_${index}`).innerText = found.bookName;
+        document.getElementById(`price_${index}`).innerText = `$${found.price}`;
+        
+        const discElem = document.getElementById(`discount_${index}`);
+        discElem.disabled = false;
+        discElem.classList.remove('bg-slate-100');
+        discElem.value = defaultRatio;
+
+        document.getElementById(`discPrice_${index}`).innerText = `$${found.defaultPrice}`;
+        
+        const qtyElem = document.getElementById(`qty_${index}`);
+        qtyElem.disabled = false;
+        qtyElem.classList.remove('bg-slate-100');
+        qtyElem.value = 1;
+
+        document.getElementById(`total_${index}`).innerText = `$${found.defaultPrice}`;
+
+      } else {
+        document.getElementById(`bookName_${index}`).innerText = "❌ 找不到對應書籍";
+        clearRowData(index, false);
+      }
+      updateTotalSummary();
     }
 
-    function saveDraftAction() {
+    function handleSeqKeyDown(e, index) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const nextInput = document.getElementById(`seq_input_${index + 1}`);
+        if (nextInput) nextInput.focus();
+      }
+    }
+
+    function clearRowData(index, clearSeqInput = true) {
+      if (clearSeqInput) document.getElementById(`seq_input_${index}`).value = "";
+      document.getElementById(`price_${index}`).innerText = "$0";
+      
+      const discElem = document.getElementById(`discount_${index}`);
+      discElem.value = ""; discElem.disabled = true; discElem.classList.add('bg-slate-100');
+      
+      document.getElementById(`discPrice_${index}`).innerText = "$0";
+      
+      const qtyElem = document.getElementById(`qty_${index}`);
+      qtyElem.value = 1; qtyElem.disabled = true; qtyElem.classList.add('bg-slate-100');
+      
+      document.getElementById(`total_${index}`).innerText = "$0";
+      gridRowsData[index] = null;
+    }
+
+    // 9) 單獨修改折扣限制 (最低 0.70，0.70~0.87跳警示)
+    function onDiscountChange(index) {
+      const data = gridRowsData[index];
+      if (!data) return;
+
+      let disc = parseFloat(document.getElementById(`discount_${index}`).value);
+
+      if (isNaN(disc) || disc < 0.70) {
+        showToast("單獨修改折扣最低只可到 7 折 (0.70)！", "error");
+        disc = 0.70;
+        document.getElementById(`discount_${index}`).value = 0.70;
+      } else if (disc < 0.88) {
+        showToast(`注意：目前設定了高折扣 ${disc} 折！`, "warning");
+      }
+
+      data.discount = disc;
+      data.discountPrice = Math.round(data.price * disc);
+      data.totalPrice = data.discountPrice * data.qty;
+
+      document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice}`;
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice}`;
+      updateTotalSummary();
+    }
+
+    function onQtyChange(index) {
+      const data = gridRowsData[index];
+      if (!data) return;
+
+      const qty = parseInt(document.getElementById(`qty_${index}`).value) || 1;
+      data.qty = qty;
+      data.totalPrice = data.discountPrice * qty;
+
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice}`;
+      updateTotalSummary();
+    }
+
+    // 8) 批次套用折扣 (最多 88 折)
+    function applyBulkDiscountLimit() {
+      let bulkDisc = parseFloat(document.getElementById('bulkDiscountInput').value);
+
+      if (isNaN(bulkDisc) || bulkDisc < 0.88) {
+        showToast("整批統一折扣最多只能給予 88 折 (0.88)！", "error");
+        bulkDisc = 0.88;
+        document.getElementById('bulkDiscountInput').value = 0.88;
+      }
+
+      gridRowsData.forEach((data, index) => {
+        if (data) {
+          data.discount = bulkDisc;
+          data.discountPrice = Math.round(data.price * bulkDisc);
+          data.totalPrice = data.discountPrice * data.qty;
+
+          document.getElementById(`discount_${index}`).value = bulkDisc;
+          document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice}`;
+          document.getElementById(`total_${index}`).innerText = `$${data.totalPrice}`;
+        }
+      });
+
+      updateTotalSummary();
+      showToast(`已批次套用 ${bulkDisc} 折扣`, "success");
+    }
+
+    function updateTotalSummary() {
+      let totalQty = 0;
+      let totalPrice = 0;
+      gridRowsData.forEach(d => {
+        if (d) {
+          totalQty += d.qty;
+          totalPrice += d.totalPrice;
+        }
+      });
+      document.getElementById('draftTotalSummary').innerText = `${totalQty} 本 / $${totalPrice}`;
+      document.getElementById('draftBadge').innerText = gridRowsData.filter(Boolean).length;
+    }
+
+    // 1), 2), 3) 開單嚴格驗證與提交邏輯
+    function validateAndGetFormData() {
+      const dateVal = document.getElementById('draftOrderDate').value.trim();
+      const branch = document.getElementById('selectBranch').value;
+      const school = document.getElementById('selectSchool').value;
+      const grade = document.getElementById('selectGrade').value;
       const orderId = document.getElementById('draftOrderId').value.trim();
       const customerName = document.getElementById('draftCustomerName').value.trim();
       const phone = document.getElementById('draftPhone').value.trim();
 
-      if (!orderId || !customerName || !phone) {
-        showToast("請填寫實體單號、客人姓名及電話！", "warning");
-        return;
+      // 1. 日期驗證 (YYMMDD)
+      if (!/^\d{6}$/.test(dateVal)) {
+        showToast("落單日期格式必須為 6 位數字 (YYMMDD)！", "error");
+        return null;
+      }
+      const yy = parseInt(dateVal.substring(0, 2));
+      const mm = parseInt(dateVal.substring(2, 4));
+      const dd = parseInt(dateVal.substring(4, 6));
+
+      if (yy < 25 || yy > 27) {
+        showToast("年份超出允許範圍 (只能為 25, 26, 27)！", "error");
+        return null;
+      }
+      if (mm < 1 || mm > 12) {
+        showToast("月份必須在 01 至 12 之間！", "error");
+        return null;
+      }
+      if (dd < 1 || dd > 31) {
+        showToast("日期必須在 01 至 31 之間！", "error");
+        return null;
       }
 
-      if (currentDraftItems.length === 0) {
-        showToast("草稿箱內無任何書籍！", "warning");
-        return;
+      if (!branch || !school || !grade) {
+        showToast("請完整選擇門市、學校與年級！", "error");
+        return null;
       }
 
-      const payload = {
+      // 2. 實體單號長度驗證 (10字)
+      if (orderId.length !== 10) {
+        showToast("實體單號長度【必須剛好等於 10 個字】！", "error");
+        return null;
+      }
+
+      if (!customerName) {
+        showToast("請填寫客人姓名！", "error");
+        return null;
+      }
+
+      // 3. 電話長度提示/驗證
+      if (phone.length < 8) {
+        showToast("聯絡電話長度不能少於 8 位數字！", "error");
+        return null;
+      } else if (phone.length > 8) {
+        showToast("注意：電話號碼超過 8 位數字 (例如包含地區號碼)", "warning");
+      }
+
+      const activeItems = gridRowsData.filter(Boolean).map(item => ({
+        school: school,
+        seqNo: item.seqNo,
+        bookNo: item.bookNo,
+        bookName: item.bookName,
+        price: item.price,
+        discount: item.discount,
+        discountPrice: item.discountPrice,
+        qty: item.qty,
+        totalPrice: item.totalPrice
+      }));
+
+      if (activeItems.length === 0) {
+        showToast("請最少在下方輸入一行有效的書籍序號！", "error");
+        return null;
+      }
+
+      return {
         action: "saveDraft",
         orderId: orderId,
-        orderDate: document.getElementById('draftOrderDate').value,
+        orderDate: dateVal,
         customerName: customerName,
         phone: phone,
-        items: currentDraftItems,
+        items: activeItems,
         remark: document.getElementById('draftRemark').value,
         operator: "Admin"
       };
+    }
+
+    function saveDraftAction() {
+      const payload = validateAndGetFormData();
+      if (!payload) return;
 
       sendGasApi(payload, (res) => {
-        showToast(res.message || "草稿已儲存", "success");
-        addSampleLog("新增/修改草稿", orderId, `包含 ${currentDraftItems.length} 項商品`);
+        showToast(res.message || "草稿已儲存！", "success");
+        addSampleLog("新增/修改草稿", payload.orderId, `儲存 ${payload.items.length} 本書籍`);
       });
     }
 
     function voidDraftAction() {
       const orderId = document.getElementById('draftOrderId').value.trim();
-      if (!orderId) {
-        showToast("請輸入要劃花作廢的實體單號！", "warning");
+      if (orderId.length !== 10) {
+        showToast("劃花作廢之單號長度必須剛好為 10 個字！", "error");
         return;
       }
 
-      if (!confirm(`確定要將實體單號 [${orderId}] 標記為【劃花作廢】嗎？此單號將永久鎖定！`)) return;
+      if (!confirm(`確定要將實體單號 [${orderId}] 標記為【劃花作廢】嗎？此單號將鎖死！`)) return;
 
       const payload = {
         action: "voidDraft",
@@ -722,191 +819,90 @@
       };
 
       sendGasApi(payload, (res) => {
-        showToast(res.message || "單號已劃花作廢", "error");
+        showToast(res.message || "單號已成功劃花作廢！", "error");
         addSampleLog("劃花作廢單號", orderId, "單號已鎖定");
-        currentDraftItems = [];
-        renderDraftTable();
+        init50GridRows();
       });
     }
 
     function commitToOrdersAction() {
-      const orderId = document.getElementById('draftOrderId').value.trim();
-      if (!orderId) {
-        showToast("請輸入實體單號！", "warning");
-        return;
-      }
+      const payload = validateAndGetFormData();
+      if (!payload) return;
 
-      const payload = {
-        action: "commitToOrders",
-        orderId: orderId,
-        operator: "Admin"
-      };
-
-      sendGasApi(payload, (res) => {
-        showToast(res.message || "過數成功！已轉入 Orders 大表", "success");
-        addSampleLog("轉入正式大表", orderId, "核對過數成功");
-        
-        const orderDate = document.getElementById('draftOrderDate').value;
-        const custName = document.getElementById('draftCustomerName').value;
-        const phone = document.getElementById('draftPhone').value;
-
-        currentDraftItems.forEach(item => {
-          mockOrders.push({
-            orderId: orderId,
-            orderDate: orderDate,
-            customerName: custName,
-            phone: phone,
-            school: item.school,
-            bookNo: item.bookNo,
-            bookName: item.bookName,
-            totalPrice: item.totalPrice,
-            orderDateOrder: "",
-            arrivalDate: "",
-            notifyDate: "",
-            pickupDate: "",
-            cancelDate: "",
-            internalStatus: "新訂單",
-            publicStatus: "新訂單"
+      // 先存草稿再轉大表
+      sendGasApi(payload, () => {
+        sendGasApi({ action: "commitToOrders", orderId: payload.orderId, operator: "Admin" }, (res) => {
+          showToast(res.message || "過數成功！已轉入 Orders 大表", "success");
+          addSampleLog("轉入正式大表", payload.orderId, "核對過數成功");
+          
+          payload.items.forEach(item => {
+            mockOrders.push({
+              orderId: payload.orderId,
+              orderDate: payload.orderDate,
+              customerName: payload.customerName,
+              phone: payload.phone,
+              school: item.school,
+              bookNo: item.bookNo,
+              bookName: item.bookName,
+              totalPrice: item.totalPrice,
+              orderDateOrder: "", arrivalDate: "", notifyDate: "", pickupDate: "", cancelDate: "",
+              internalStatus: "新訂單", publicStatus: "新訂單"
+            });
           });
-        });
 
-        renderOrdersTable(mockOrders);
-        currentDraftItems = [];
-        renderDraftTable();
-        switchTab('orders');
+          renderOrdersTable(mockOrders);
+          init50GridRows();
+          switchTab('orders');
+        });
       });
     }
 
-    // ==================== TAB 2: 訂單進度管理與智能配貨 ====================
+    // 表格渲染與通訊輔助函數
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'border-blue-500', 'text-white'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(`tabBtn-${tabId}`).classList.add('active', 'border-blue-500', 'text-white');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
     function renderOrdersTable(orders) {
       const tbody = document.getElementById('ordersTableBody');
       if (orders.length === 0) {
         tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-slate-400 font-sans">大表中暫無訂單紀錄</td></tr>`;
         return;
       }
-
       let html = "";
       orders.forEach((o, index) => {
         html += `
           <tr class="hover:bg-slate-50 border-b border-slate-100">
             <td class="p-3 font-bold text-blue-600">${o.orderId}</td>
             <td class="p-3 text-slate-500">${o.orderDate}</td>
-            <td class="p-3 font-sans">
-              <div class="font-semibold text-slate-800">${o.customerName}</div>
-              <div class="text-[11px] text-slate-400 font-mono">${o.phone}</div>
-            </td>
+            <td class="p-3 font-sans"><div class="font-semibold text-slate-800">${o.customerName}</div><div class="text-[11px] text-slate-400 font-mono">${o.phone}</div></td>
             <td class="p-3 font-sans text-slate-600">${o.school}</td>
-            <td class="p-3 font-sans">
-              <div class="font-medium text-slate-900">${o.bookName}</div>
-              <div class="text-[10px] text-slate-400 font-mono">${o.bookNo}</div>
-            </td>
+            <td class="p-3 font-sans"><div class="font-medium text-slate-900">${o.bookName}</div><div class="text-[10px] text-slate-400 font-mono">${o.bookNo}</div></td>
             <td class="p-3 font-bold text-slate-900">$${o.totalPrice}</td>
-
-            <td class="p-2 bg-slate-50/50">
-              <input type="text" value="${o.orderDateOrder || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'orderDateOrder', this.value)"
-                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
-            </td>
-            <td class="p-2 bg-slate-50/50">
-              <input type="text" value="${o.arrivalDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'arrivalDate', this.value)"
-                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
-            </td>
-            <td class="p-2 bg-slate-50/50">
-              <input type="text" value="${o.notifyDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'notifyDate', this.value)"
-                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
-            </td>
-            <td class="p-2 bg-slate-50/50">
-              <input type="text" value="${o.pickupDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'pickupDate', this.value)"
-                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
-            </td>
-            <td class="p-2 bg-slate-50/50">
-              <input type="text" value="${o.cancelDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'cancelDate', this.value)"
-                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
-            </td>
-
-            <td class="p-3">${getStatusBadge(o.internalStatus)}</td>
-            <td class="p-3">${getStatusBadge(o.publicStatus)}</td>
-
-            <td class="p-3 text-center">
-              <button onclick="saveSingleOrderLifecycle(${index})" class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200">
-                更新
-              </button>
-            </td>
+            <td class="p-2"><input type="text" value="${o.orderDateOrder || ''}" class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none"></td>
+            <td class="p-2"><input type="text" value="${o.arrivalDate || ''}" class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none"></td>
+            <td class="p-2"><input type="text" value="${o.notifyDate || ''}" class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none"></td>
+            <td class="p-2"><input type="text" value="${o.pickupDate || ''}" class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none"></td>
+            <td class="p-2"><input type="text" value="${o.cancelDate || ''}" class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none"></td>
+            <td class="p-3"><span class="bg-slate-100 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-sans">${o.internalStatus}</span></td>
+            <td class="p-3"><span class="bg-slate-100 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-sans">${o.publicStatus}</span></td>
+            <td class="p-3 text-center"><button class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-200">更新</button></td>
           </tr>
         `;
       });
-
       tbody.innerHTML = html;
     }
 
-    function updateOrderDate(index, field, value) {
-      mockOrders[index][field] = value.trim();
-      const o = mockOrders[index];
-      if (o.cancelDate) o.internalStatus = "已取消";
-      else if (o.pickupDate) o.internalStatus = "已完成";
-      else if (o.arrivalDate || o.notifyDate) o.internalStatus = "已到貨(可到店取)";
-      else if (o.orderDateOrder) o.internalStatus = "在訂中";
-      else o.internalStatus = "新訂單";
-
-      renderOrdersTable(mockOrders);
-    }
-
-    function getStatusBadge(status) {
-      switch(status) {
-        case "新訂單": return `<span class="bg-slate-100 text-slate-700 text-[10px] px-2 py-0.5 rounded-full border border-slate-300 font-sans">新訂單</span>`;
-        case "在訂中": return `<span class="bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-300 font-sans">在訂中</span>`;
-        case "已到貨(可到店取)": return `<span class="bg-emerald-50 text-emerald-700 font-bold text-[10px] px-2 py-0.5 rounded-full border border-emerald-300 font-sans">已到貨(可取)</span>`;
-        case "已完成": return `<span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-300 font-sans">已完成</span>`;
-        case "已取消": return `<span class="bg-red-50 text-red-600 text-[10px] px-2 py-0.5 rounded-full border border-red-300 font-sans">已取消</span>`;
-        default: return `<span class="text-slate-400 text-[10px] font-sans">${status || '未知'}</span>`;
-      }
-    }
-
-    function executeBatchArrival() {
-      const bookNo = document.getElementById('batchBookNo').value.trim();
-      const arrivalDate = document.getElementById('batchArrivalDate').value.trim();
-
-      if (!bookNo) {
-        showToast("請輸入要配貨的產品代號/書號！", "warning");
-        return;
-      }
-
-      let count = 0;
-      mockOrders.forEach(o => {
-        if (o.bookNo === bookNo && !o.arrivalDate && !o.pickupDate && !o.cancelDate) {
-          o.arrivalDate = arrivalDate;
-          o.internalStatus = "已到貨(可到店取)";
-          count++;
-        }
-      });
-
-      renderOrdersTable(mockOrders);
-      showToast(`書號 [${bookNo}] 批次配貨完成，共更新 ${count} 張訂單！`, "success");
-      addSampleLog("智能批次配貨", bookNo, `完成批次到貨，更新 ${count} 張單`);
-    }
-
-    function filterOrdersTable() {
-      const search = document.getElementById('orderSearchInput').value.toLowerCase();
-      const status = document.getElementById('statusFilterSelect').value;
-
-      const filtered = mockOrders.filter(o => {
-        const matchSearch = o.orderId.toLowerCase().includes(search) || o.phone.includes(search) || o.customerName.includes(search);
-        const matchStatus = !status || o.internalStatus === status;
-        return matchSearch && matchStatus;
-      });
-
-      renderOrdersTable(filtered);
-    }
-
-    // ==================== TAB 3: 書單庫主檔 ====================
     function renderProductsTable(products) {
       const tbody = document.getElementById('productsTableBody');
       document.getElementById('productCount').innerText = products.length;
-
       let html = "";
       products.forEach(p => {
         html += `
           <tr class="hover:bg-slate-50 border-b border-slate-100">
-            <td class="p-3 font-sans text-slate-500">${p.branch}</td>
+            <td class="p-3 font-sans text-slate-500">${p.branch || '-'}</td>
             <td class="p-3 font-sans font-semibold text-slate-800">${p.school}</td>
             <td class="p-3 font-sans">${p.grade}</td>
             <td class="p-3 font-bold text-blue-600">${p.seqNo}</td>
@@ -914,93 +910,45 @@
             <td class="p-3 font-sans font-medium text-slate-900">${p.bookName}</td>
             <td class="p-3 text-slate-400">$${p.price}</td>
             <td class="p-3 font-bold text-emerald-600">$${p.defaultPrice}</td>
-            <td class="p-3 font-sans text-slate-600">${p.publisher}</td>
-            <td class="p-3 font-sans text-slate-500">${p.supplier}</td>
+            <td class="p-3 font-sans text-slate-600">${p.publisher || '-'}</td>
+            <td class="p-3 font-sans text-slate-500">${p.supplier || '-'}</td>
           </tr>
         `;
       });
       tbody.innerHTML = html;
     }
 
-    // ==================== TAB 4: 日誌 Logs ====================
-    function addSampleLog(action, target, details) {
-      const nowStr = new Date().toLocaleString('zh-HK');
-      mockLogs.unshift({
-        time: nowStr,
-        operator: "Admin",
-        action: action,
-        target: target,
-        details: details
-      });
-      renderLogsTable();
-    }
-
-    function renderLogsTable() {
-      const tbody = document.getElementById('logsTableBody');
-      let html = "";
-      mockLogs.forEach(l => {
-        html += `
-          <tr class="hover:bg-slate-50 border-b border-slate-100">
-            <td class="p-3 text-slate-400 text-[11px]">${l.time}</td>
-            <td class="p-3 font-semibold text-slate-700">${l.operator}</td>
-            <td class="p-3 font-bold text-blue-600">${l.action}</td>
-            <td class="p-3 text-slate-500">${l.target}</td>
-            <td class="p-3 font-sans text-slate-700">${l.details}</td>
-          </tr>
-        `;
-      });
-      tbody.innerHTML = html;
-    }
-
-    // ==================== GAS API 通訊工具 ====================
     function sendGasApi(payload, callback) {
       if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
-        console.warn("未設定 GAS API URL，使用前端本地模擬運作。");
-        setTimeout(() => callback({ status: "success", message: "（展示模式：本地模擬成功）" }), 300);
+        setTimeout(() => callback({ status: "success", message: "（本地模擬成功）" }), 300);
         return;
       }
-
-      fetch(GAS_WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      })
+      fetch(GAS_WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
       .then(res => res.json())
-      .then(data => {
-        if (data.status === "success") {
-          callback(data);
-        } else {
-          showToast(data.message || "操作失敗", "error");
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        showToast("網路連線錯誤或 API 失敗", "error");
-      });
+      .then(data => data.status === "success" ? callback(data) : showToast(data.message, "error"))
+      .catch(() => showToast("連線失敗", "error"));
     }
 
-    // Toast 通知 UI
+    function addSampleLog(action, target, details) {
+      mockLogs.unshift({ time: new Date().toLocaleString('zh-HK'), operator: "Admin", action: action, target: target, details: details });
+      const tbody = document.getElementById('logsTableBody');
+      tbody.innerHTML = mockLogs.map(l => `
+        <tr class="border-b border-slate-100"><td class="p-3 text-slate-400">${l.time}</td><td class="p-3 font-semibold">${l.operator}</td><td class="p-3 font-bold text-blue-600">${l.action}</td><td class="p-3">${l.target}</td><td class="p-3">${l.details}</td></tr>
+      `).join('');
+    }
+
     function showToast(msg, type = "info") {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
-      
       let bg = "bg-slate-900 text-white";
-      if (type === "success") bg = "bg-emerald-600 text-white shadow-emerald-500/20";
-      if (type === "error") bg = "bg-red-600 text-white shadow-red-500/20";
-      if (type === "warning") bg = "bg-amber-500 text-white shadow-amber-500/20";
-
+      if (type === "success") bg = "bg-emerald-600 text-white";
+      if (type === "error") bg = "bg-red-600 text-white";
+      if (type === "warning") bg = "bg-amber-500 text-white";
       toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-xl shadow-xl text-xs font-medium transition-all transform translate-y-2 opacity-0 ${bg}`;
       toast.innerHTML = `<span>${msg}</span>`;
-
       container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      }, 50);
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+      setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 50);
+      setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); setTimeout(() => toast.remove(), 300); }, 3000);
     }
   </script>
 </body>
