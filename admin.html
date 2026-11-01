@@ -64,12 +64,12 @@
           </div>
           <div>
             <h1 class="font-bold text-base tracking-wide leading-none">門巿學校訂書 ERP</h1>
-            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v2.8</span>
+            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v2.11</span>
           </div>
         </div>
 
         <div class="flex items-center space-x-3">
-          <button onclick="handleLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
+          <button onclick="handleLogout()" class="text-xs bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span>登出</span>
           </button>
@@ -108,7 +108,7 @@
       <!-- TAB 1: 新開訂單 / 草稿箱 -->
       <section id="tab-drafts" class="tab-content active space-y-6">
         
-        <!-- 第一部分 -->
+        <!-- 第一部分：訂單基本資料 -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -126,8 +126,8 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">實體單號 (須剛好10字) <span class="text-red-500">*</span></label>
-              <input type="text" id="draftOrderId" maxlength="10" placeholder="例: A123456789" onkeydown="handleEnterNext(event, 'draftCustomerName')"
+              <label class="block text-xs font-bold text-slate-700 mb-1">實體單號 (建議10字) <span class="text-red-500">*</span></label>
+              <input type="text" id="draftOrderId" placeholder="例: A123456789" onkeydown="handleEnterNext(event, 'draftCustomerName')"
                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
             </div>
 
@@ -145,7 +145,7 @@
           </div>
         </div>
 
-        <!-- 第二部分 -->
+        <!-- 第二部分：門市與學籍分類 -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -182,7 +182,7 @@
           </div>
         </div>
 
-        <!-- 第三部分 -->
+        <!-- 第三部分：訂購明細 (序號、書號、書名) -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-3">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -356,15 +356,9 @@
   <!-- JavaScript 核心邏輯 -->
   <script>
     const SYSTEM_PIN = "admin888";
-    
-    // 🌐 請確認此處已填入你正確的 GAS /exec 網址
-    const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
 
-    let mockProducts = [
-      { branch: "灣仔店", school: "ABC小學", grade: "小一", seqNo: 1, bookNo: "BK-001", bookName: "英文常規課本 1A", price: 150, defaultPrice: 120 },
-      { branch: "灣仔店", school: "ABC小學", grade: "小一", seqNo: 2, bookNo: "BK-002", bookName: "英文補充練習 1A", price: 80, defaultPrice: 64 }
-    ];
-
+    let mockProducts = [];
     let gridRowsData = new Array(50).fill(null);
     let mockOrders = [];
     let mockLogs = [];
@@ -387,14 +381,13 @@
       }
     }
 
-    // 🔑 登入驗證與向 GAS 自動同步資料
     function handleLogin(e) {
       e.preventDefault();
       const pin = document.getElementById('loginPin').value;
       if (pin === SYSTEM_PIN) {
         document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('appUI').classList.remove('hidden');
-        showToast("登入成功！正在同步 Google 試算表...", "success");
+        showToast("登入成功！正在從 Google 試算表同步資料...", "success");
         fetchAllDataFromGas();
       } else {
         document.getElementById('loginError').classList.remove('hidden');
@@ -407,11 +400,9 @@
       document.getElementById('loginPin').value = '';
     }
 
-    // 向 GAS 發送 POST 請求抓取 Products 資料
     function fetchAllDataFromGas() {
-      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec") {
-        showToast("尚未設定 GAS 網址，使用本地預設數據", "warning");
-        populateBranchDropdown();
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        showToast("尚未設定 GAS 網址", "warning");
         return;
       }
 
@@ -427,19 +418,17 @@
           populateBranchDropdown();
           showToast("已成功從 Google 試算表同步資料！", "success");
         } else {
-          showToast("試算表 Products 暫無資料或回傳格式不符", "warning");
-          populateBranchDropdown();
+          showToast(data.message || "試算表 Products 暫無資料", "warning");
         }
       })
       .catch(err => {
         console.error("同步失敗:", err);
-        showToast("同步失敗，請檢查 GAS 網址或網絡連線", "error");
-        populateBranchDropdown();
+        showToast("同步失敗，請檢查網絡", "error");
       });
     }
 
     function populateBranchDropdown() {
-      const branches = [...new Set(mockProducts.map(p => p.branch))].filter(Boolean);
+      const branches = [...new Set(mockProducts.map(p => String(p.branch).trim()))].filter(Boolean);
       const branchSelect = document.getElementById('selectBranch');
       let html = '<option value="">-- 請選擇門市 --</option>';
       branches.forEach(b => {
@@ -449,7 +438,7 @@
     }
 
     function onBranchChange() {
-      const branch = document.getElementById('selectBranch').value;
+      const branch = document.getElementById('selectBranch').value.trim();
       const schoolSelect = document.getElementById('selectSchool');
       const gradeSelect = document.getElementById('selectGrade');
       gradeSelect.innerHTML = '<option value="">-- 請先選擇學校 --</option>';
@@ -459,14 +448,14 @@
         return;
       }
 
-      const schools = [...new Set(mockProducts.filter(p => p.branch === branch).map(p => p.school))].filter(Boolean);
+      const schools = [...new Set(mockProducts.filter(p => String(p.branch).trim() === branch).map(p => String(p.school).trim()))].filter(Boolean);
       schoolSelect.innerHTML = '<option value="">-- 請選擇學校 --</option>' + 
         schools.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
     function onSchoolChange() {
-      const branch = document.getElementById('selectBranch').value;
-      const school = document.getElementById('selectSchool').value;
+      const branch = document.getElementById('selectBranch').value.trim();
+      const school = document.getElementById('selectSchool').value.trim();
       const gradeSelect = document.getElementById('selectGrade');
 
       if (!school) {
@@ -474,7 +463,7 @@
         return;
       }
 
-      const grades = [...new Set(mockProducts.filter(p => p.branch === branch && p.school === school).map(p => p.grade))].filter(Boolean);
+      const grades = [...new Set(mockProducts.filter(p => String(p.branch).trim() === branch && String(p.school).trim() === school).map(p => String(p.grade).trim()))].filter(Boolean);
       gradeSelect.innerHTML = '<option value="">-- 請選擇年級 --</option>' + 
         grades.map(g => `<option value="${g}">${g}</option>`).join('');
     }
@@ -484,7 +473,6 @@
       showToast("已鎖定年級，請於下方輸入序號！", "info");
     }
 
-    // 初始化 50 列快配網格
     function init50GridRows() {
       const tbody = document.getElementById('quickGridBody');
       gridRowsData = new Array(50).fill(null);
@@ -493,7 +481,7 @@
       for (let i = 0; i < 50; i++) {
         html += `
           <tr id="gridRow_${i}" class="hover:bg-slate-50 border-b border-slate-100">
-            <td class="p-2 text-center text-slate-400 text-[11px]">${i + 1}</td>
+            <td class="p-2 text-center text-slate-400 text-[11px] font-sans">${i + 1}</td>
             <td class="p-2">
               <input type="number" id="seq_input_${i}" oninput="onSeqInputChange(${i})" onkeydown="handleSeqKeyDown(event, ${i})" placeholder="序號" 
                      class="w-full px-2 py-1 bg-white border border-slate-200 rounded text-center font-bold text-blue-600 outline-none">
@@ -522,9 +510,9 @@
     }
 
     function onSeqInputChange(index) {
-      const branch = document.getElementById('selectBranch').value;
-      const school = document.getElementById('selectSchool').value;
-      const grade = document.getElementById('selectGrade').value;
+      const branch = document.getElementById('selectBranch').value.trim();
+      const school = document.getElementById('selectSchool').value.trim();
+      const grade = document.getElementById('selectGrade').value.trim();
       const seqVal = parseInt(document.getElementById(`seq_input_${index}`).value);
 
       if (!branch || !school || !grade) {
@@ -539,43 +527,51 @@
         return;
       }
 
-      const found = mockProducts.find(p => p.branch === branch && p.school === school && p.grade === grade && parseInt(p.seqNo) === seqVal);
+      const found = mockProducts.find(p => 
+        String(p.branch).trim() === branch && 
+        String(p.school).trim() === school && 
+        String(p.grade).trim() === grade && 
+        parseInt(p.seqNo) === seqVal
+      );
 
       if (found) {
-        const defaultRatio = found.price > 0 ? (found.defaultPrice / found.price).toFixed(2) : 0.8;
+        const priceVal = parseFloat(found.price) || 0;
+        const defaultPriceVal = parseFloat(found.defaultPrice) || priceVal;
+        const defaultRatio = priceVal > 0 ? (defaultPriceVal / priceVal).toFixed(2) : 0.8;
 
         gridRowsData[index] = {
           seqNo: found.seqNo,
-          bookNo: found.bookNo,
-          bookName: found.bookName,
-          originalPrice: found.price,
-          price: found.price,
+          bookNo: found.bookNo || "",
+          bookName: found.bookName || "",
+          originalPrice: priceVal,
+          price: priceVal,
           discount: parseFloat(defaultRatio),
-          discountPrice: found.defaultPrice,
+          discountPrice: defaultPriceVal,
           qty: 1,
-          totalPrice: found.defaultPrice
+          totalPrice: defaultPriceVal
         };
 
         document.getElementById(`bookNo_${index}`).innerText = found.bookNo || "-";
-        document.getElementById(`bookName_${index}`).innerText = found.bookName;
+        document.getElementById(`bookName_${index}`).innerText = found.bookName || "-";
         
         const priceElem = document.getElementById(`priceInput_${index}`);
-        priceElem.disabled = false; priceElem.classList.remove('bg-slate-100'); priceElem.value = found.price;
+        priceElem.disabled = false; priceElem.classList.remove('bg-slate-100'); priceElem.value = priceVal;
 
         const discElem = document.getElementById(`discount_${index}`);
         discElem.disabled = false; discElem.classList.remove('bg-slate-100'); discElem.value = defaultRatio;
 
-        document.getElementById(`discPrice_${index}`).innerText = `$${found.defaultPrice}`;
+        document.getElementById(`discPrice_${index}`).innerText = `$${defaultPriceVal}`;
         
         const qtyElem = document.getElementById(`qty_${index}`);
         qtyElem.disabled = false; qtyElem.classList.remove('bg-slate-100'); qtyElem.value = 1;
 
-        document.getElementById(`total_${index}`).innerText = `$${found.defaultPrice}`;
+        document.getElementById(`total_${index}`).innerText = `$${defaultPriceVal}`;
 
       } else {
+        // 找不到資料時提示未能匹配，保留原行不跳行
         document.getElementById(`bookNo_${index}`).innerText = "-";
-        document.getElementById(`bookName_${index}`).innerText = "❌ 找不到序號";
-        clearRowData(index, false); // 保留序號輸入框，不跳行
+        document.getElementById(`bookName_${index}`).innerText = "⚠️ 未能匹配";
+        clearRowData(index, false); 
       }
       updateTotalSummary();
     }
@@ -708,8 +704,8 @@
         return null;
       }
 
-      if (orderId.length !== 10) {
-        showToast("實體單號必須剛好 10 個字！", "error");
+      if (!orderId) {
+        showToast("請填寫實體單號！", "error");
         document.getElementById('draftOrderId').focus();
         return null;
       }
@@ -756,8 +752,8 @@
 
     function voidDraftAction() {
       const orderId = document.getElementById('draftOrderId').value.trim();
-      if (orderId.length !== 10) {
-        showToast("作廢單號必須剛好 10 個字！", "error");
+      if (!orderId) {
+        showToast("請輸入要作廢的單號！", "error");
         return;
       }
       if (!confirm(`確定要將單號 [${orderId}] 標記為作廢嗎？`)) return;
@@ -804,7 +800,7 @@
     }
 
     function sendGasApi(payload, callback) {
-      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
         setTimeout(() => callback({ status: "success", message: "（本地模擬成功）" }), 300);
         return;
       }
