@@ -451,17 +451,62 @@
       addSampleLog("系統初始化", "SYSTEM", "後台介面載入完成");
     };
 
-    // 🔑 登入驗證處理
+// 🔑 登入驗證處理
     function handleLogin(e) {
       e.preventDefault();
       const pin = document.getElementById('loginPin').value;
       if (pin === SYSTEM_PIN) {
         document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('appUI').classList.remove('hidden');
-        showToast("登入成功！歡迎使用 ERP 後台", "success");
+        showToast("登入成功！正在從 Google 試算表同步資料...", "success");
+        
+        // 🚀 登入成功後，自動向 GAS 請求試算表中的真實資料！
+        fetchAllDataFromGas();
+        
       } else {
         document.getElementById('loginError').classList.remove('hidden');
       }
+    }
+
+    // 🌐 從 GAS 抓取真實試算表資料 (Products 書單庫)
+    function fetchAllDataFromGas() {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
+        showToast("尚未設定正確的 GAS 網址，目前使用本地模擬數據", "warning");
+        return;
+      }
+
+      // 發送請求抓取 Products 分頁資料
+      fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "getProducts", schoolName: "" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success" && data.data && data.data.length > 0) {
+          mockProducts = data.data; // 將資料替換為試算表真實數據
+          renderProductsTable(mockProducts);
+          populateSchoolDropdown(); // 自動更新開單時的學校下拉選單
+          showToast("已成功同步試算表書單庫！", "success");
+        } else {
+          showToast("試算表 Products 暫無資料", "warning");
+        }
+      })
+      .catch(err => {
+        console.error("讀取 Products 失敗:", err);
+        showToast("同步 Products 失敗，請檢查網路", "error");
+      });
+    }
+
+    // 動態更新開單選單中的學校選項
+    function populateSchoolDropdown() {
+      const select = document.getElementById('quickSchoolSelect');
+      const schools = [...new Set(mockProducts.map(p => p.school))].filter(Boolean);
+      
+      let html = '<option value="">-- 請選擇學校 --</option>';
+      schools.forEach(s => {
+        html += `<option value="${s}">${s}</option>`;
+      });
+      select.innerHTML = html;
     }
 
     function handleLogout() {
