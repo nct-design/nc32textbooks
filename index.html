@@ -79,7 +79,7 @@
         }
 
         // 🌐 請在此處填入你 Google Apps Script 部署取得的 /exec 網頁應用程式 URL
-        const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL";
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
 
         async function searchOrders() {
             let phoneInput = document.getElementById('phoneInput').value.trim();
@@ -90,7 +90,7 @@
                 return;
             }
 
-            if (GAS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec") {
+            if (GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
                 resultArea.innerHTML = `<p class="error-msg">系統尚未設定 GAS API 網址，請先在程式碼中填入 /exec 網址。</p>`;
                 return;
             }
