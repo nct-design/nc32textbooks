@@ -17,6 +17,40 @@
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* 👁️ 隱關閉瀏覽器內建的密碼框眼睛按鈕，避免重複 */
+    input::-ms-reveal,
+    input::-ms-clear {
+      display: none;
+    }
+    input[type="password"]::-webkit-credentials-auto-fill-button,
+    input[type="password"]::-webkit-contacts-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+      height: 0;
+      width: 0;
+      margin: 0;
+    }
+
+    /* 🖨️ 專屬列印樣式：強制隱藏網址、時間、頁碼及所有後台介面 */
+    @media print {
+      @page {
+        size: auto;
+        margin: 5mm; 
+      }
+      body * { visibility: hidden; }
+      #printableReceipt, #printableReceipt * { visibility: visible; }
+      #printableReceipt { 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
@@ -34,22 +68,29 @@
 
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">管理員密碼</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+            管理員密碼
+          </label>
           <div class="relative">
-            <input type="password" id="loginPin" placeholder="預設: admin888" 
-                   class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-mono">
+            <!-- 預設密碼值直接寫在 value 中，游標會自動聚焦在此 -->
+            <input type="password" id="loginPin" value="admin888" placeholder="請輸入管理員密碼" required
+                   class="w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-mono text-sm">
             <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400"></i>
+            <!-- 👁️ 唯一的密碼顯示/隱藏切換按鈕 -->
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-700 focus:outline-none">
+              <i id="eyeIcon" class="fa-solid fa-eye"></i>
+            </button>
           </div>
         </div>
         
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2">
+        <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2">
           <span>安全登入</span>
           <i class="fa-solid fa-arrow-right text-sm"></i>
         </button>
       </form>
       
       <div id="loginError" class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs text-center font-medium">
-        密碼錯誤，請重新輸入！
+        密碼錯誤或系統驗證失敗，請重新輸入！
       </div>
     </div>
   </div>
@@ -64,7 +105,7 @@
           </div>
           <div>
             <h1 class="font-bold text-base tracking-wide leading-none">門巿學校訂書 ERP</h1>
-            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v2.11</span>
+            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v2.16</span>
           </div>
         </div>
 
@@ -120,8 +161,8 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">落單日期 (YYMMDD) <span class="text-red-500">*</span></label>
-              <input type="text" id="draftOrderDate" placeholder="例: 261101" onkeydown="handleEnterNext(event, 'draftOrderId')"
+              <label class="block text-xs font-bold text-slate-700 mb-1">落單日期 (YYYY-MM-DD) <span class="text-red-500">*</span></label>
+              <input type="date" id="draftOrderDate" onkeydown="handleEnterNext(event, 'draftOrderId')"
                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
             </div>
 
@@ -182,7 +223,7 @@
           </div>
         </div>
 
-        <!-- 第三部分：訂購明細 (序號、書號、書名) -->
+        <!-- 第三部分：訂購明細 (動態表格) -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-3">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
@@ -191,7 +232,7 @@
             </h3>
 
             <div class="flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <span class="text-xs text-slate-600 font-bold">批次折扣 (最多88折):</span>
+              <span class="text-xs text-slate-600 font-bold">批次折扣 (最高88折):</span>
               <input type="number" step="0.01" id="bulkDiscountInput" placeholder="0.88" 
                      class="w-20 px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-mono text-center outline-none">
               <button onclick="applyBulkDiscountLimit()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white font-medium px-3 py-1 rounded-lg transition-all">
@@ -205,20 +246,29 @@
               <thead class="bg-slate-800 text-slate-200 font-semibold sticky top-0 z-10">
                 <tr>
                   <th class="p-2.5 w-12 text-center">#</th>
-                  <th class="p-2.5 w-20 text-center">序號</th>
+                  <th class="p-2.5 w-24 text-center">序號</th>
                   <th class="p-2.5 w-28">書號</th>
                   <th class="p-2.5">書名</th>
-                  <th class="p-2.5 w-28 text-center">原定價 ($可改)</th>
+                  <th class="p-2.5 w-28 text-center">定價 ($可改)</th>
                   <th class="p-2.5 w-24 text-center">折扣 (最低0.7)</th>
                   <th class="p-2.5 w-24 text-right">折實單價</th>
                   <th class="p-2.5 w-20 text-center">數量</th>
                   <th class="p-2.5 w-24 text-right">小計</th>
+                  <th class="p-2.5 w-12 text-center">操作</th>
                 </tr>
               </thead>
               <tbody id="quickGridBody" class="divide-y divide-slate-100 font-mono">
-                <!-- 50 列動態生成 -->
+                <!-- 動態生成的列 -->
               </tbody>
             </table>
+          </div>
+
+          <div class="mt-3 flex justify-between items-center">
+            <button onclick="addNewGridRow()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1">
+              <i class="fa-solid fa-plus"></i>
+              <span>新增書籍列</span>
+            </button>
+            <span class="text-xs text-slate-400">提示：支援小數點一位數 (如 $125.5)</span>
           </div>
 
           <div class="mt-4 flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-4">
@@ -230,7 +280,7 @@
             <div class="flex items-center space-x-6">
               <div class="text-right">
                 <span class="text-xs text-slate-500 font-sans block">總件數 / 總金額</span>
-                <span id="draftTotalSummary" class="text-lg font-bold text-blue-600 font-mono">0 本 / $0</span>
+                <span id="draftTotalSummary" class="text-lg font-bold text-blue-600 font-mono">0 本 / $0.0</span>
               </div>
             </div>
           </div>
@@ -238,6 +288,11 @@
 
         <!-- 按鈕區 -->
         <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+          <button onclick="printOrderReceipt()" class="bg-slate-600 hover:bg-slate-700 text-white font-medium px-4 py-2.5 rounded-xl transition-all flex items-center space-x-2 text-sm">
+            <i class="fa-solid fa-print"></i>
+            <span>列印三聯單/收據</span>
+          </button>
+
           <button onclick="saveDraftAction()" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center space-x-2 text-sm">
             <i class="fa-solid fa-floppy-disk"></i>
             <span>儲存草稿</span>
@@ -351,27 +406,48 @@
     </footer>
   </div>
 
+  <!-- 🖨️ 專用三聯單列印隱藏容器 -->
+  <div id="printableReceipt" class="hidden p-8 bg-white text-black font-sans"></div>
+
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
   <!-- JavaScript 核心邏輯 -->
   <script>
-    const SYSTEM_PIN = "admin888";
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
 
     let mockProducts = [];
-    let gridRowsData = new Array(50).fill(null);
+    let gridRowsData = []; 
     let mockOrders = [];
     let mockLogs = [];
 
     window.onload = function() {
-      const now = new Date();
-      const yymmdd = String(now.getFullYear()).slice(-2) + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
-      document.getElementById('draftOrderDate').value = yymmdd;
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('draftOrderDate').value = today;
 
-      init50GridRows();
+      initDynamicGridRows(5); 
       renderProductsTable(mockProducts);
       populateBranchDropdown();
+
+      // 🎯 讓畫面開啟時，游標自動聚焦在密碼輸入框並全選文字，方便直接修改或輸入
+      const pinInput = document.getElementById('loginPin');
+      if (pinInput) {
+        pinInput.focus();
+        pinInput.select();
+      }
     };
+
+    // 👁️ 切換密碼顯示/隱藏功能
+    function togglePasswordVisibility() {
+      const pinInput = document.getElementById('loginPin');
+      const eyeIcon = document.getElementById('eyeIcon');
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        eyeIcon.className = 'fa-solid fa-eye-slash';
+      } else {
+        pinInput.type = 'password';
+        eyeIcon.className = 'fa-solid fa-eye';
+      }
+    }
 
     function handleEnterNext(e, nextId) {
       if (e.key === 'Enter') {
@@ -383,28 +459,65 @@
 
     function handleLogin(e) {
       e.preventDefault();
-      const pin = document.getElementById('loginPin').value;
-      if (pin === SYSTEM_PIN) {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('appUI').classList.remove('hidden');
-        showToast("登入成功！正在從 Google 試算表同步資料...", "success");
-        fetchAllDataFromGas();
-      } else {
-        document.getElementById('loginError').classList.remove('hidden');
+      const pin = document.getElementById('loginPin').value.trim();
+      const btn = document.getElementById('loginBtn');
+      
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>驗證中...</span>`;
+      document.getElementById('loginError').classList.add('hidden');
+
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
+        if (pin === "admin888") {
+          loginSuccess();
+        } else {
+          loginFail();
+        }
+        return;
       }
+
+      fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "loginPin", pin: pin })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success") {
+          loginSuccess();
+        } else {
+          loginFail();
+        }
+      })
+      .catch(() => loginFail())
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<span>安全登入</span><i class="fa-solid fa-arrow-right text-sm"></i>`;
+      });
+    }
+
+    function loginSuccess() {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('appUI').classList.remove('hidden');
+      showToast("登入成功！正在同步 Google 試算表資料...", "success");
+      fetchAllDataFromGas();
+    }
+
+    function loginFail() {
+      document.getElementById('loginError').classList.remove('hidden');
     }
 
     function handleLogout() {
       document.getElementById('appUI').classList.add('hidden');
       document.getElementById('loginOverlay').classList.remove('hidden');
-      document.getElementById('loginPin').value = '';
+      document.getElementById('loginPin').value = 'admin888';
+      const pinInput = document.getElementById('loginPin');
+      if (pinInput) {
+        pinInput.focus();
+        pinInput.select();
+      }
     }
 
     function fetchAllDataFromGas() {
-      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
-        showToast("尚未設定 GAS 網址", "warning");
-        return;
-      }
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) return;
 
       fetch(GAS_WEB_APP_URL, {
         method: "POST",
@@ -416,24 +529,17 @@
           mockProducts = data.data;
           renderProductsTable(mockProducts);
           populateBranchDropdown();
-          showToast("已成功從 Google 試算表同步資料！", "success");
-        } else {
-          showToast(data.message || "試算表 Products 暫無資料", "warning");
+          showToast("已成功同步試算表資料！", "success");
         }
       })
-      .catch(err => {
-        console.error("同步失敗:", err);
-        showToast("同步失敗，請檢查網絡", "error");
-      });
+      .catch(() => showToast("資料同步失敗，請檢查網路", "error"));
     }
 
     function populateBranchDropdown() {
       const branches = [...new Set(mockProducts.map(p => String(p.branch).trim()))].filter(Boolean);
       const branchSelect = document.getElementById('selectBranch');
       let html = '<option value="">-- 請選擇門市 --</option>';
-      branches.forEach(b => {
-        html += `<option value="${b}">${b}</option>`;
-      });
+      branches.forEach(b => { html += `<option value="${b}">${b}</option>`; });
       branchSelect.innerHTML = html;
     }
 
@@ -447,10 +553,8 @@
         schoolSelect.innerHTML = '<option value="">-- 請先選擇門市 --</option>';
         return;
       }
-
       const schools = [...new Set(mockProducts.filter(p => String(p.branch).trim() === branch).map(p => String(p.school).trim()))].filter(Boolean);
-      schoolSelect.innerHTML = '<option value="">-- 請選擇學校 --</option>' + 
-        schools.map(s => `<option value="${s}">${s}</option>`).join('');
+      schoolSelect.innerHTML = '<option value="">-- 請選擇學校 --</option>' + schools.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
     function onSchoolChange() {
@@ -462,49 +566,79 @@
         gradeSelect.innerHTML = '<option value="">-- 請先選擇學校 --</option>';
         return;
       }
-
       const grades = [...new Set(mockProducts.filter(p => String(p.branch).trim() === branch && String(p.school).trim() === school).map(p => String(p.grade).trim()))].filter(Boolean);
-      gradeSelect.innerHTML = '<option value="">-- 請選擇年級 --</option>' + 
-        grades.map(g => `<option value="${g}">${g}</option>`).join('');
+      gradeSelect.innerHTML = '<option value="">-- 請選擇年級 --</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
     }
 
     function onGradeChange() {
-      init50GridRows();
+      initDynamicGridRows(5);
       showToast("已鎖定年級，請於下方輸入序號！", "info");
     }
 
-    function init50GridRows() {
+    function initDynamicGridRows(count = 5) {
+      gridRowsData = new Array(count).fill(null);
+      renderGridBody();
+    }
+
+    function addNewGridRow() {
+      gridRowsData.push(null);
+      renderGridBody();
+    }
+
+    function removeGridRow(index) {
+      gridRowsData.splice(index, 1);
+      if (gridRowsData.length === 0) gridRowsData.push(null);
+      renderGridBody();
+      updateTotalSummary();
+    }
+
+    function renderGridBody() {
       const tbody = document.getElementById('quickGridBody');
-      gridRowsData = new Array(50).fill(null);
       let html = "";
 
-      for (let i = 0; i < 50; i++) {
+      gridRowsData.forEach((data, i) => {
+        const seqVal = data && data.seqNo !== undefined ? data.seqNo : "";
+        const bookNo = data ? data.bookNo : "-";
+        const bookName = data ? data.bookName : (data === false ? "⚠️ 找不到序號" : "-");
+        const price = data ? data.price : "";
+        const disc = data ? data.discount : "";
+        const discPrice = data ? data.discountPrice.toFixed(1) : "0.0";
+        const qty = data ? data.qty : 1;
+        const total = data ? data.totalPrice.toFixed(1) : "0.0";
+        const disabled = !data;
+
         html += `
           <tr id="gridRow_${i}" class="hover:bg-slate-50 border-b border-slate-100">
             <td class="p-2 text-center text-slate-400 text-[11px] font-sans">${i + 1}</td>
             <td class="p-2">
-              <input type="number" id="seq_input_${i}" oninput="onSeqInputChange(${i})" onkeydown="handleSeqKeyDown(event, ${i})" placeholder="序號" 
+              <input type="number" min="1" id="seq_input_${i}" value="${seqVal}" oninput="onSeqInputChange(${i})" onkeydown="handleSeqKeyDown(event, ${i})" placeholder="序號" 
                      class="w-full px-2 py-1 bg-white border border-slate-200 rounded text-center font-bold text-blue-600 outline-none">
             </td>
-            <td class="p-2 font-mono text-slate-500" id="bookNo_${i}">-</td>
-            <td class="p-2 font-sans text-slate-700" id="bookName_${i}">-</td>
+            <td class="p-2 font-mono text-slate-500" id="bookNo_${i}">${bookNo}</td>
+            <td class="p-2 font-sans ${data === false ? 'text-red-500 font-bold' : 'text-slate-700'}" id="bookName_${i}">${bookName}</td>
             <td class="p-2 text-center">
-              <input type="number" step="0.5" id="priceInput_${i}" onchange="onPriceInputChange(${i})" placeholder="$定價" disabled
-                     class="w-24 px-1.5 py-1 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none text-slate-700 font-bold">
+              <input type="number" step="0.1" id="priceInput_${i}" value="${price}" onchange="onPriceInputChange(${i})" placeholder="$定價" ${disabled ? 'disabled' : ''}
+                     class="w-24 px-1.5 py-1 ${disabled ? 'bg-slate-100' : 'bg-white'} border border-slate-200 rounded text-center font-mono outline-none text-slate-700 font-bold">
             </td>
             <td class="p-2 text-center">
-              <input type="number" step="0.01" id="discount_${i}" onchange="onDiscountChange(${i})" placeholder="0.8" disabled
-                     class="w-16 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none">
+              <input type="number" step="0.01" id="discount_${i}" value="${disc}" onchange="onDiscountChange(${i})" placeholder="0.88" ${disabled ? 'disabled' : ''}
+                     class="w-16 px-1.5 py-0.5 ${disabled ? 'bg-slate-100' : 'bg-white'} border border-slate-200 rounded text-center font-mono outline-none">
             </td>
-            <td class="p-2 text-right font-bold text-blue-600" id="discPrice_${i}">$0</td>
+            <td class="p-2 text-right font-bold text-blue-600" id="discPrice_${i}">$${discPrice}</td>
             <td class="p-2 text-center">
-              <input type="number" min="1" id="qty_${i}" value="1" onchange="onQtyChange(${i})" disabled
-                     class="w-12 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none">
+              <input type="number" min="1" id="qty_${i}" value="${qty}" onchange="onQtyChange(${i})" ${disabled ? 'disabled' : ''}
+                     class="w-12 px-1.5 py-0.5 ${disabled ? 'bg-slate-100' : 'bg-white'} border border-slate-200 rounded text-center font-mono outline-none">
             </td>
-            <td class="p-2 text-right font-bold text-slate-900" id="total_${i}">$0</td>
+            <td class="p-2 text-right font-bold text-slate-900" id="total_${i}">$${total}</td>
+            <td class="p-2 text-center">
+              <button onclick="removeGridRow(${i})" class="text-slate-400 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </td>
           </tr>
         `;
-      }
+      });
+
       tbody.innerHTML = html;
       updateTotalSummary();
     }
@@ -513,17 +647,43 @@
       const branch = document.getElementById('selectBranch').value.trim();
       const school = document.getElementById('selectSchool').value.trim();
       const grade = document.getElementById('selectGrade').value.trim();
-      const seqVal = parseInt(document.getElementById(`seq_input_${index}`).value);
+      const seqInput = document.getElementById(`seq_input_${index}`);
+      if (!seqInput) return;
+      
+      const seqValStr = seqInput.value.trim();
+      
+      const bookNoElem = document.getElementById(`bookNo_${index}`);
+      const bookNameElem = document.getElementById(`bookName_${index}`);
+      const priceElem = document.getElementById(`priceInput_${index}`);
+      const discElem = document.getElementById(`discount_${index}`);
+      const discPriceElem = document.getElementById(`discPrice_${index}`);
+      const qtyElem = document.getElementById(`qty_${index}`);
+      const totalElem = document.getElementById(`total_${index}`);
 
       if (!branch || !school || !grade) {
         showToast("請先完整選擇【門市、學校、年級】！", "warning");
-        document.getElementById(`seq_input_${index}`).value = "";
+        seqInput.value = "";
         return;
       }
 
-      if (isNaN(seqVal)) {
-        clearRowData(index);
+      if (seqValStr === "") {
+        bookNoElem.innerText = "-";
+        bookNameElem.innerText = "-";
+        bookNameElem.className = "p-2 font-sans text-slate-700";
+        priceElem.value = ""; priceElem.disabled = true; priceElem.classList.add('bg-slate-100'); priceElem.classList.remove('bg-white');
+        discElem.value = ""; discElem.disabled = true; discElem.classList.add('bg-slate-100'); discElem.classList.remove('bg-white');
+        discPriceElem.innerText = "$0.0";
+        qtyElem.value = 1; qtyElem.disabled = true; qtyElem.classList.add('bg-slate-100'); qtyElem.classList.remove('bg-white');
+        totalElem.innerText = "$0.0";
+        gridRowsData[index] = null;
         updateTotalSummary();
+        return;
+      }
+
+      const seqVal = parseInt(seqValStr);
+
+      if (isNaN(seqVal) || seqVal <= 0) {
+        showToast("序號必須為大於 0 的正整數！", "warning");
         return;
       }
 
@@ -537,7 +697,7 @@
       if (found) {
         const priceVal = parseFloat(found.price) || 0;
         const defaultPriceVal = parseFloat(found.defaultPrice) || priceVal;
-        const defaultRatio = priceVal > 0 ? (defaultPriceVal / priceVal).toFixed(2) : 0.8;
+        const defaultRatio = priceVal > 0 ? parseFloat((defaultPriceVal / priceVal).toFixed(2)) : 0.88;
 
         gridRowsData[index] = {
           seqNo: found.seqNo,
@@ -545,33 +705,33 @@
           bookName: found.bookName || "",
           originalPrice: priceVal,
           price: priceVal,
-          discount: parseFloat(defaultRatio),
-          discountPrice: defaultPriceVal,
+          discount: defaultRatio,
+          discountPrice: parseFloat((priceVal * defaultRatio).toFixed(1)),
           qty: 1,
-          totalPrice: defaultPriceVal
+          totalPrice: parseFloat((priceVal * defaultRatio).toFixed(1))
         };
 
-        document.getElementById(`bookNo_${index}`).innerText = found.bookNo || "-";
-        document.getElementById(`bookName_${index}`).innerText = found.bookName || "-";
-        
-        const priceElem = document.getElementById(`priceInput_${index}`);
-        priceElem.disabled = false; priceElem.classList.remove('bg-slate-100'); priceElem.value = priceVal;
+        bookNoElem.innerText = found.bookNo || "-";
+        bookNameElem.innerText = found.bookName || "-";
+        bookNameElem.className = "p-2 font-sans text-slate-700";
 
-        const discElem = document.getElementById(`discount_${index}`);
-        discElem.disabled = false; discElem.classList.remove('bg-slate-100'); discElem.value = defaultRatio;
-
-        document.getElementById(`discPrice_${index}`).innerText = `$${defaultPriceVal}`;
-        
-        const qtyElem = document.getElementById(`qty_${index}`);
-        qtyElem.disabled = false; qtyElem.classList.remove('bg-slate-100'); qtyElem.value = 1;
-
-        document.getElementById(`total_${index}`).innerText = `$${defaultPriceVal}`;
+        priceElem.disabled = false; priceElem.classList.remove('bg-slate-100'); priceElem.classList.add('bg-white'); priceElem.value = priceVal;
+        discElem.disabled = false; discElem.classList.remove('bg-slate-100'); discElem.classList.add('bg-white'); discElem.value = defaultRatio;
+        discPriceElem.innerText = `$${gridRowsData[index].discountPrice.toFixed(1)}`;
+        qtyElem.disabled = false; qtyElem.classList.remove('bg-slate-100'); qtyElem.classList.add('bg-white'); qtyElem.value = 1;
+        totalElem.innerText = `$${gridRowsData[index].totalPrice.toFixed(1)}`;
 
       } else {
-        // 找不到資料時提示未能匹配，保留原行不跳行
-        document.getElementById(`bookNo_${index}`).innerText = "-";
-        document.getElementById(`bookName_${index}`).innerText = "⚠️ 未能匹配";
-        clearRowData(index, false); 
+        showToast(`⚠️ 找不到序號 [${seqVal}] 的書籍，請重新確認！`, "error");
+        bookNoElem.innerText = "-";
+        bookNameElem.innerText = "⚠️ 找不到序號";
+        bookNameElem.className = "p-2 font-sans text-red-500 font-bold";
+        priceElem.value = ""; priceElem.disabled = true; priceElem.classList.add('bg-slate-100');
+        discElem.value = ""; discElem.disabled = true; discElem.classList.add('bg-slate-100');
+        discPriceElem.innerText = "$0.0";
+        qtyElem.value = 1; qtyElem.disabled = true; qtyElem.classList.add('bg-slate-100');
+        totalElem.innerText = "$0.0";
+        gridRowsData[index] = false;
       }
       updateTotalSummary();
     }
@@ -579,8 +739,19 @@
     function handleSeqKeyDown(e, index) {
       if (e.key === 'Enter') {
         e.preventDefault();
-        const nextInput = document.getElementById(`seq_input_${index + 1}`);
-        if (nextInput) nextInput.focus();
+        onSeqInputChange(index);
+
+        if (index === gridRowsData.length - 1) {
+          addNewGridRow();
+        }
+
+        setTimeout(() => {
+          const nextInput = document.getElementById(`seq_input_${index + 1}`);
+          if (nextInput) {
+            nextInput.focus();
+            nextInput.select();
+          }
+        }, 50);
       }
     }
 
@@ -591,18 +762,18 @@
       const priceElem = document.getElementById(`priceInput_${index}`);
       let newPrice = parseFloat(priceElem.value);
 
-      if (isNaN(newPrice) || priceElem.value.trim() === "") {
-        showToast("定價不能空白！已自動回復原定價。", "warning");
+      if (isNaN(newPrice) || newPrice < 0) {
+        showToast("定價格式不正確！已自動恢復原定價。", "warning");
         newPrice = data.originalPrice;
         priceElem.value = newPrice;
       }
 
       data.price = newPrice;
-      data.discountPrice = Math.round(newPrice * data.discount);
-      data.totalPrice = data.discountPrice * data.qty;
+      data.discountPrice = parseFloat((newPrice * data.discount).toFixed(1));
+      data.totalPrice = parseFloat((data.discountPrice * data.qty).toFixed(1));
 
-      document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice}`;
-      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice}`;
+      document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice.toFixed(1)}`;
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
       updateTotalSummary();
     }
 
@@ -612,17 +783,17 @@
 
       let disc = parseFloat(document.getElementById(`discount_${index}`).value);
       if (isNaN(disc) || disc < 0.70) {
-        showToast("最低只可到 7 折 (0.70)！", "error");
+        showToast("最低折扣只可到 7 折 (0.70)！", "error");
         disc = 0.70;
         document.getElementById(`discount_${index}`).value = 0.70;
       }
 
       data.discount = disc;
-      data.discountPrice = Math.round(data.price * disc);
-      data.totalPrice = data.discountPrice * data.qty;
+      data.discountPrice = parseFloat((data.price * disc).toFixed(1));
+      data.totalPrice = parseFloat((data.discountPrice * data.qty).toFixed(1));
 
-      document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice}`;
-      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice}`;
+      document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice.toFixed(1)}`;
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
       updateTotalSummary();
     }
 
@@ -630,32 +801,17 @@
       const data = gridRowsData[index];
       if (!data) return;
 
-      const qty = parseInt(document.getElementById(`qty_${index}`).value) || 1;
+      let qty = parseInt(document.getElementById(`qty_${index}`).value);
+      if (isNaN(qty) || qty < 1) {
+        qty = 1;
+        document.getElementById(`qty_${index}`).value = 1;
+      }
+
       data.qty = qty;
-      data.totalPrice = data.discountPrice * qty;
+      data.totalPrice = parseFloat((data.discountPrice * qty).toFixed(1));
 
-      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice}`;
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
       updateTotalSummary();
-    }
-
-    function clearRowData(index, clearSeqInput = true) {
-      if (clearSeqInput) document.getElementById(`seq_input_${index}`).value = "";
-      document.getElementById(`bookNo_${index}`).innerText = "-";
-      document.getElementById(`bookName_${index}`).innerText = "-";
-      
-      const priceElem = document.getElementById(`priceInput_${index}`);
-      priceElem.value = ""; priceElem.disabled = true; priceElem.classList.add('bg-slate-100');
-
-      const discElem = document.getElementById(`discount_${index}`);
-      discElem.value = ""; discElem.disabled = true; discElem.classList.add('bg-slate-100');
-      
-      document.getElementById(`discPrice_${index}`).innerText = "$0";
-      
-      const qtyElem = document.getElementById(`qty_${index}`);
-      qtyElem.value = 1; qtyElem.disabled = true; qtyElem.classList.add('bg-slate-100');
-      
-      document.getElementById(`total_${index}`).innerText = "$0";
-      gridRowsData[index] = null;
     }
 
     function applyBulkDiscountLimit() {
@@ -667,27 +823,30 @@
       }
 
       gridRowsData.forEach((data, index) => {
-        if (data) {
+        if (data && typeof data === 'object') {
           data.discount = bulkDisc;
-          data.discountPrice = Math.round(data.price * bulkDisc);
-          data.totalPrice = data.discountPrice * data.qty;
+          data.discountPrice = parseFloat((data.price * bulkDisc).toFixed(1));
+          data.totalPrice = parseFloat((data.discountPrice * data.qty).toFixed(1));
 
           document.getElementById(`discount_${index}`).value = bulkDisc;
-          document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice}`;
-          document.getElementById(`total_${index}`).innerText = `$${data.totalPrice}`;
+          document.getElementById(`discPrice_${index}`).innerText = `$${data.discountPrice.toFixed(1)}`;
+          document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
         }
       });
       updateTotalSummary();
-      showToast(`已批次套用 ${bulkDisc} 折扣`, "success");
+      showToast(`已套用 ${bulkDisc} 批次折扣`, "success");
     }
 
     function updateTotalSummary() {
       let totalQty = 0, totalPrice = 0;
       gridRowsData.forEach(d => {
-        if (d) { totalQty += d.qty; totalPrice += d.totalPrice; }
+        if (d && typeof d === 'object' && d.qty) { 
+          totalQty += d.qty; 
+          totalPrice += d.totalPrice; 
+        }
       });
-      document.getElementById('draftTotalSummary').innerText = `${totalQty} 本 / $${totalPrice}`;
-      document.getElementById('draftBadge').innerText = gridRowsData.filter(Boolean).length;
+      document.getElementById('draftTotalSummary').innerText = `${totalQty} 本 / $${totalPrice.toFixed(1)}`;
+      document.getElementById('draftBadge').innerText = gridRowsData.filter(d => d && typeof d === 'object' && d.seqNo).length;
     }
 
     function validateAndGetFormData() {
@@ -696,26 +855,27 @@
       const customerName = document.getElementById('draftCustomerName').value.trim();
       const phone = document.getElementById('draftPhone').value.trim();
       const branch = document.getElementById('selectBranch').value;
-      const school = document.getElementById('selectSchool').value;
-      const grade = document.getElementById('selectGrade').value;
+      const schoolElem = document.getElementById('selectSchool');
+      const gradeElem = document.getElementById('selectGrade');
 
-      if (!/^\d{6}$/.test(dateVal)) {
-        showToast("落單日期必須為 6 位數字 (YYMMDD)！", "error");
+      const school = schoolElem.value;
+      const grade = gradeElem.value;
+
+      if (!dateVal) {
+        showToast("請選擇落單日期！", "error");
         return null;
       }
-
       if (!orderId) {
         showToast("請填寫實體單號！", "error");
         document.getElementById('draftOrderId').focus();
         return null;
       }
-
       if (!customerName || !phone || !branch || !school || !grade) {
         showToast("請完整填寫所有基本資料與門市學籍！", "error");
         return null;
       }
 
-      const activeItems = gridRowsData.filter(Boolean).map(item => ({
+      const activeItems = gridRowsData.filter(d => d && typeof d === 'object' && d.seqNo).map(item => ({
         school: school,
         seqNo: item.seqNo,
         bookNo: item.bookNo,
@@ -732,16 +892,97 @@
         return null;
       }
 
+      const schoolText = schoolElem.options[schoolElem.selectedIndex] ? schoolElem.options[schoolElem.selectedIndex].text : school;
+      const gradeText = gradeElem.options[gradeElem.selectedIndex] ? gradeElem.options[gradeElem.selectedIndex].text : grade;
+      const branchText = document.getElementById('selectBranch').value;
+
       return {
         action: "saveDraft",
         orderId: orderId,
         orderDate: dateVal,
         customerName: customerName,
         phone: phone,
+        schoolNameText: schoolText,
+        gradeText: gradeText,
+        branchText: branchText,
         items: activeItems,
         remark: document.getElementById('draftRemark').value,
         operator: "Admin"
       };
+    }
+
+    function printOrderReceipt() {
+      const payload = validateAndGetFormData();
+      if (!payload) return;
+
+      const container = document.getElementById('printableReceipt');
+      let totalQty = 0, totalPrice = 0;
+
+      let itemsHtml = payload.items.map((item, idx) => {
+        totalQty += item.qty;
+        totalPrice += item.totalPrice;
+        return `
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 6px; text-align: center;">${idx + 1}</td>
+            <td style="padding: 6px;">${item.bookName}</td>
+            <td style="padding: 6px; text-align: center;">$${item.price.toFixed(1)}</td>
+            <td style="padding: 6px; text-align: center;">$${item.discountPrice.toFixed(1)}</td>
+            <td style="padding: 6px; text-align: center;">${item.qty}</td>
+            <td style="padding: 6px; text-align: right;">$${item.totalPrice.toFixed(1)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div style="border: 2px solid #000; padding: 20px; font-family: sans-serif; max-width: 800px; margin: 0 auto; background: white;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="font-size: 18px; margin: 0;">🏫 學校訂書專門店 - 門市三聯單</h2>
+            <div style="text-align: right; font-size: 13px;">
+              <p style="margin: 2px 0;"><strong>單號：</strong>${payload.orderId}</p>
+              <p style="margin: 2px 0;"><strong>日期：</strong>${payload.orderDate}</p>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px;">
+            <div>
+              <p style="margin: 3px 0;"><strong>客戶姓名：</strong>${payload.customerName}</p>
+              <p style="margin: 3px 0;"><strong>聯絡電話：</strong>${payload.phone}</p>
+            </div>
+            <div>
+              <p style="margin: 3px 0;"><strong>學校 / 年級：</strong>${payload.schoolNameText} (${payload.gradeText})</p>
+              <p style="margin: 3px 0;"><strong>負責門市：</strong>${payload.branchText}</p>
+            </div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+            <thead>
+              <tr style="background: #f2f2f2; border-bottom: 2px solid #000;">
+                <th style="padding: 6px; width: 40px;">#</th>
+                <th style="padding: 6px; text-align: left;">書單名稱</th>
+                <th style="padding: 6px; width: 60px;">原價</th>
+                <th style="padding: 6px; width: 70px;">折實單價</th>
+                <th style="padding: 6px; width: 50px;">數量</th>
+                <th style="padding: 6px; text-align: right; width: 70px;">小計</th>
+              </tr>
+            </thead>
+            <tbody>${itemsHtml}</tbody>
+          </table>
+
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #000; padding-top: 10px;">
+            <div>
+              <p style="font-size: 12px; color: #333; margin: 2px 0;">備註：${payload.remark || '無'}</p>
+              <p style="font-size: 12px; margin-top: 15px; margin-bottom: 2px;">客戶簽收：__________________</p>
+            </div>
+            <div style="text-align: right;">
+              <p style="font-size: 15px; font-weight: bold; margin: 0;">總件數：${totalQty} 本 | 總金額：$${totalPrice.toFixed(1)}</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.classList.remove('hidden');
+      window.print();
+      container.classList.add('hidden');
     }
 
     function saveDraftAction() {
@@ -758,8 +999,8 @@
       }
       if (!confirm(`確定要將單號 [${orderId}] 標記為作廢嗎？`)) return;
       sendGasApi({ action: "voidDraft", orderId: orderId, reason: "劃花廢單", operator: "Admin" }, (res) => {
-        showToast(res.message || "已作廢", "error");
-        init50GridRows();
+        showToast(res.message || "已劃花作廢", "error");
+        initDynamicGridRows(5);
       });
     }
 
@@ -769,7 +1010,7 @@
       sendGasApi(payload, () => {
         sendGasApi({ action: "commitToOrders", orderId: payload.orderId, operator: "Admin" }, (res) => {
           showToast(res.message || "過數成功！", "success");
-          init50GridRows();
+          initDynamicGridRows(5);
           switchTab('orders');
         });
       });
@@ -793,8 +1034,8 @@
           <td class="p-3 font-bold text-blue-600">${p.seqNo}</td>
           <td class="p-3 text-slate-500">${p.bookNo}</td>
           <td class="p-3 font-medium text-slate-900">${p.bookName}</td>
-          <td class="p-3 text-slate-400">$${p.price}</td>
-          <td class="p-3 font-bold text-emerald-600">$${p.defaultPrice}</td>
+          <td class="p-3 text-slate-400">$${parseFloat(p.price || 0).toFixed(1)}</td>
+          <td class="p-3 font-bold text-emerald-600">$${parseFloat(p.defaultPrice || 0).toFixed(1)}</td>
         </tr>
       `).join('');
     }
@@ -807,7 +1048,7 @@
       fetch(GAS_WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
       .then(res => res.json())
       .then(data => data.status === "success" ? callback(data) : showToast(data.message, "error"))
-      .catch(() => showToast("連線失敗", "error"));
+      .catch(() => showToast("與伺服器連線失敗", "error"));
     }
 
     function showToast(msg, type = "info") {
