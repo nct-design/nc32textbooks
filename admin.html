@@ -911,12 +911,22 @@
       };
     }
 
+// 🖨️ 改良版列印：加入查詢網址 QR Code 動態生成
     function printOrderReceipt() {
       const payload = validateAndGetFormData();
       if (!payload) return;
 
       const container = document.getElementById('printableReceipt');
       let totalQty = 0, totalPrice = 0;
+
+      // 🔗 您的客人線上查詢訂單網址（請替換成您實際的查詢頁面 URL）
+      const BASE_SEARCH_URL = "https://nct-design.github.io/nc32textbooks/"; 
+      
+      // 📌 組合帶有該筆訂單號的完整查詢網址
+      const orderSearchUrl = `${BASE_SEARCH_URL}?orderId=${encodeURIComponent(payload.orderId)}`;
+
+      // 📱 使用免費 API 動態生成 100x100 像素的 QR Code 圖片網址
+      const qrCodeImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(orderSearchUrl)}`;
 
       let itemsHtml = payload.items.map((item, idx) => {
         totalQty += item.qty;
@@ -935,14 +945,22 @@
 
       container.innerHTML = `
         <div style="border: 2px solid #000; padding: 20px; font-family: sans-serif; max-width: 800px; margin: 0 auto; background: white;">
+          <!-- 頂部標題與 QR Code 區域 -->
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
-            <h2 style="font-size: 18px; margin: 0;">🏫 學校訂書專門店 - 門市三聯單</h2>
-            <div style="text-align: right; font-size: 13px;">
-              <p style="margin: 2px 0;"><strong>單號：</strong>${payload.orderId}</p>
-              <p style="margin: 2px 0;"><strong>日期：</strong>${payload.orderDate}</p>
+            <div>
+              <h2 style="font-size: 18px; margin: 0 0 5px 0;">🏫 學校訂書專門店 - 門市三聯單</h2>
+              <p style="margin: 2px 0; font-size: 13px;"><strong>單號：</strong>${payload.orderId}</p>
+              <p style="margin: 2px 0; font-size: 13px;"><strong>日期：</strong>${payload.orderDate}</p>
+            </div>
+            
+            <!-- 📱 QR Code 顯示區塊 -->
+            <div style="text-align: center; border: 1px border-slate-300; padding: 4px; border-radius: 6px;">
+              <img src="${qrCodeImgSrc}" alt="QR Code" style="width: 80px; height: 80px; display: block; margin: 0 auto;" />
+              <span style="font-size: 10px; color: #555; display: block; margin-top: 2px;">掃描追蹤訂單進度</span>
             </div>
           </div>
 
+          <!-- 客人與門市資料區 -->
           <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px;">
             <div>
               <p style="margin: 3px 0;"><strong>客戶姓名：</strong>${payload.customerName}</p>
@@ -954,6 +972,7 @@
             </div>
           </div>
 
+          <!-- 書籍明細表格 -->
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
             <thead>
               <tr style="background: #f2f2f2; border-bottom: 2px solid #000;">
@@ -968,6 +987,7 @@
             <tbody>${itemsHtml}</tbody>
           </table>
 
+          <!-- 底部簽收與金額總計 -->
           <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #000; padding-top: 10px;">
             <div>
               <p style="font-size: 12px; color: #333; margin: 2px 0;">備註：${payload.remark || '無'}</p>
@@ -980,9 +1000,25 @@
         </div>
       `;
 
-      container.classList.remove('hidden');
-      window.print();
-      container.classList.add('hidden');
+      // ⏳ 確保圖片載入完成後再跳出列印視窗
+      const img = container.querySelector('img');
+      if (img) {
+        img.onload = function() {
+          container.classList.remove('hidden');
+          window.print();
+          container.classList.add('hidden');
+        };
+        img.onerror = function() {
+          // 若網路有延遲圖片載入失敗，仍提供正常列印
+          container.classList.remove('hidden');
+          window.print();
+          container.classList.add('hidden');
+        };
+      } else {
+        container.classList.remove('hidden');
+        window.print();
+        container.classList.add('hidden');
+      }
     }
 
     function saveDraftAction() {
