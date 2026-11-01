@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學校訂書 ERP 後台管理系統</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    /* Custom scrollbar for tables */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- ==================== 1. 登入介面 (Login Modal) ==================== -->
+  <div id="loginOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-book-bookmark"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">ERP 後台管理系統</h2>
+        <p class="text-slate-500 text-sm mt-1">請輸入管理員 PIN 密碼登入</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">管理員密碼</label>
+          <div class="relative">
+            <input type="password" id="loginPin" placeholder="預設: admin888" 
+                   class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-mono">
+            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400"></i>
+          </div>
+        </div>
+        
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2">
+          <span>安全登入</span>
+          <i class="fa-solid fa-arrow-right text-sm"></i>
+        </button>
+      </form>
+      
+      <div id="loginError" class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs text-center font-medium">
+        密碼錯誤，請重新輸入！
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. 主系統包裝 (Main App UI) ==================== -->
+  <div id="appUI" class="hidden flex-1 flex flex-col">
+    
+    <!-- 頂部導航列 (Navbar) -->
+    <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-lg font-bold shadow-md shadow-blue-500/30">
+            <i class="fa-solid fa-book-open"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-base tracking-wide leading-none">學校訂书 ERP</h1>
+            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN PANEL v2.0</span>
+          </div>
+        </div>
+
+        <!-- API 連線設定與登出 -->
+        <div class="flex items-center space-x-3">
+          <button onclick="promptApiUrl()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-plug text-xs text-emerald-400"></i>
+            <span class="hidden sm:inline">GAS API 設定</span>
+          </button>
+          
+          <button onclick="handleLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>登出</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 頁籤導航欄 (Tab Nav) -->
+      <div class="bg-slate-800/80 border-t border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 overflow-x-auto no-scrollbar">
+          
+          <button onclick="switchTab('drafts')" id="tabBtn-drafts" 
+                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap active">
+            <i class="fa-solid fa-file-pen"></i>
+            <span>1. 新開訂單 / 草稿箱</span>
+            <span id="draftBadge" class="ml-1 bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full border border-amber-500/30">0</span>
+          </button>
+
+          <button onclick="switchTab('orders')" id="tabBtn-orders" 
+                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-truck-ramp-box"></i>
+            <span>2. 訂單進度與智能配貨</span>
+          </button>
+
+          <button onclick="switchTab('products')" id="tabBtn-products" 
+                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-book"></i>
+            <span>3. 書單庫主檔</span>
+          </button>
+
+          <button onclick="switchTab('logs')" id="tabBtn-logs" 
+                  class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>4. 操作日誌 Logs</span>
+          </button>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- 主體頁面內容 (Main Body) -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+      <!-- ==================== TAB 1: 新開訂單 / 草稿箱 ==================== -->
+      <section id="tab-drafts" class="tab-content active space-y-6">
+        
+        <!-- 頂部卡片：三聯單與客戶基礎資訊 -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-blue-600 rounded-full inline-block"></span>
+              <span>實體三聯單與客戶資料</span>
+            </h3>
+            <span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md font-mono">開單緩衝區 (Draft)</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">實體單號 (三聯單) <span class="text-red-500">*</span></label>
+              <input type="text" id="draftOrderId" placeholder="例: A-1024" 
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">落單日期 (YYMMDD)</label>
+              <input type="text" id="draftOrderDate" placeholder="例: 261031" 
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">客人姓名 <span class="text-red-500">*</span></label>
+              <input type="text" id="draftCustomerName" placeholder="例: 陳大文" 
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">聯絡電話 <span class="text-red-500">*</span></label>
+              <input type="text" id="draftPhone" placeholder="例: 91234567" 
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- 中間卡片：選擇學校與快速自動帶出書本 -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-emerald-500 rounded-full inline-block"></span>
+              <span>新增訂購書本 (輸入序號自動帶出)</span>
+            </h3>
+            
+            <!-- 批次折扣設定 -->
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-slate-500 font-medium">整批統一折扣:</span>
+              <input type="number" step="0.01" id="bulkDiscountInput" placeholder="0.80" 
+                     class="w-20 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-center outline-none">
+              <button onclick="applyBulkDiscount()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded-lg transition-all">
+                套用批次
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end mb-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+            <div class="md:col-span-3">
+              <label class="block text-xs font-bold text-slate-600 mb-1">選擇學校</label>
+              <select id="quickSchoolSelect" onchange="filterProductsBySchool()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none">
+                <option value="">-- 請選擇學校 --</option>
+                <option value="ABC小學">ABC小學</option>
+                <option value="XYZ中學">XYZ中學</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-slate-600 mb-1">書單序號 (打 1, 2, 3)</label>
+              <input type="number" id="quickSeqNo" placeholder="打數字 1" oninput="autoFillBySeq()" 
+                     class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-blue-600 outline-none">
+            </div>
+
+            <div class="md:col-span-4">
+              <label class="block text-xs font-bold text-slate-600 mb-1">自動帶出書名</label>
+              <input type="text" id="quickBookTitle" readonly placeholder="輸入序號後自動帶出" 
+                     class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-600 outline-none">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-slate-600 mb-1">定價 / 預設價</label>
+              <input type="text" id="quickPrice" readonly placeholder="$0" 
+                     class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm font-mono text-slate-600 outline-none">
+            </div>
+
+            <div class="md:col-span-1">
+              <button onclick="addBookToDraft()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition-all shadow-md shadow-emerald-600/20">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 草稿明細列表 -->
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
+                <tr>
+                  <th class="p-3">序號</th>
+                  <th class="p-3">學校</th>
+                  <th class="p-3">書號</th>
+                  <th class="p-3">書名</th>
+                  <th class="p-3">原定價</th>
+                  <th class="p-3">折扣 (例如 0.8)</th>
+                  <th class="p-3">折實單價</th>
+                  <th class="p-3">數量</th>
+                  <th class="p-3">小計</th>
+                  <th class="p-3 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="draftItemsTable" class="divide-y divide-slate-100 font-mono text-xs">
+                <!-- 動態注入草稿書籍 -->
+                <tr>
+                  <td colspan="10" class="p-8 text-center text-slate-400 font-sans">目前草稿暫無書籍，請於上方選擇學校並輸入序號加入。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 底部備註與總計結算 -->
+          <div class="mt-4 flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-4">
+            <div class="w-full sm:w-1/2">
+              <input type="text" id="draftRemark" placeholder="內部備忘 / 劃花原因 (例: 劃花廢單 / 客人付訂$100)" 
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none">
+            </div>
+            
+            <div class="flex items-center space-x-6">
+              <div class="text-right">
+                <span class="text-xs text-slate-500 font-sans block">總件數 / 總金額</span>
+                <span id="draftTotalSummary" class="text-lg font-bold text-blue-600 font-mono">0 本 / $0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作按鈕區 (Save, Void, Commit) -->
+        <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+          <button onclick="saveDraftAction()" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center space-x-2 text-sm">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>儲存草稿</span>
+          </button>
+
+          <button onclick="voidDraftAction()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-medium px-5 py-2.5 rounded-xl transition-all flex items-center space-x-2 text-sm">
+            <i class="fa-solid fa-ban"></i>
+            <span>劃花作廢 (鎖死單號)</span>
+          </button>
+
+          <button onclick="commitToOrdersAction()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center space-x-2 text-sm">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>✅ 確認過數 (正式轉入大表)</span>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 2: 訂單進度管理與智能配貨 ==================== -->
+      <section id="tab-orders" class="tab-content space-y-6">
+        
+        <!-- 頂部卡片：智能批次配貨與搜尋過濾器 -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-indigo-600 rounded-full inline-block"></span>
+              <span>訂單生命週期追蹤 (YYMMDD 日期驅動狀態)</span>
+            </h3>
+
+            <!-- 智能批次配貨小工具 -->
+            <div class="flex items-center space-x-2 bg-indigo-50/70 p-2 rounded-xl border border-indigo-100">
+              <span class="text-xs font-bold text-indigo-900 whitespace-nowrap pl-1"><i class="fa-solid fa-bolt text-amber-500"></i> 一鍵批次到貨:</span>
+              <input type="text" id="batchBookNo" placeholder="輸入書號 BK-001" 
+                     class="w-32 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-mono outline-none">
+              <input type="text" id="batchArrivalDate" placeholder="261031" 
+                     class="w-20 px-2 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-mono text-center outline-none">
+              <button onclick="executeBatchArrival()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-1 rounded-lg transition-all shadow-sm">
+                批次配貨
+              </button>
+            </div>
+          </div>
+
+          <!-- 搜尋與狀態過濾 -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="relative">
+              <input type="text" id="orderSearchInput" onkeyup="filterOrdersTable()" placeholder="搜尋單號 (A-1024) 或 電話..." 
+                     class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+            </div>
+
+            <div>
+              <select id="statusFilterSelect" onchange="filterOrdersTable()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+                <option value="">-- 全部內部狀態 --</option>
+                <option value="新訂單">新訂單</option>
+                <option value="在訂中">在訂中</option>
+                <option value="已到貨(可到店取)">已到貨(可到店取)</option>
+                <option value="已完成">已完成</option>
+                <option value="已取消">已取消</option>
+              </select>
+            </div>
+
+            <div class="text-right flex items-center justify-end">
+              <button onclick="loadOrdersFromSheet()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl transition-all border border-slate-200 flex items-center space-x-1">
+                <i class="fa-solid fa-rotate text-slate-500"></i>
+                <span>刷新 Orders 大表</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders 正式大表展示 (22 欄關鍵精華) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-900 text-slate-200 font-medium">
+                <tr>
+                  <th class="p-3 font-mono">訂單號</th>
+                  <th class="p-3">落單日</th>
+                  <th class="p-3">客人/電話</th>
+                  <th class="p-3">學校</th>
+                  <th class="p-3">書號/書名</th>
+                  <th class="p-3">金額</th>
+                  <th class="p-3 bg-slate-800 text-amber-300">訂貨日</th>
+                  <th class="p-3 bg-slate-800 text-emerald-300">到貨日</th>
+                  <th class="p-3 bg-slate-800 text-blue-300">通知日</th>
+                  <th class="p-3 bg-slate-800 text-purple-300">提貨日</th>
+                  <th class="p-3 bg-slate-800 text-rose-300">取消日</th>
+                  <th class="p-3">內部狀態 (Real-time)</th>
+                  <th class="p-3">對外公開狀態</th>
+                  <th class="p-3 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody" class="divide-y divide-slate-100 font-mono">
+                <!-- 載入模擬/真實資料 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 3: 書單庫主檔 (Products) ==================== -->
+      <section id="tab-products" class="tab-content space-y-6">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-purple-600 rounded-full inline-block"></span>
+              <span>書單庫 Master (學校書單與預設折扣)</span>
+            </h3>
+            <span class="text-xs text-slate-500">共 <span id="productCount" class="font-mono font-bold text-purple-600">0</span> 項書籍資料</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">分店</th>
+                  <th class="p-3">學校名稱</th>
+                  <th class="p-3">年級</th>
+                  <th class="p-3">序號</th>
+                  <th class="p-3">書號</th>
+                  <th class="p-3">書單名稱 / 產品名稱</th>
+                  <th class="p-3">定價</th>
+                  <th class="p-3">預設折實價</th>
+                  <th class="p-3">出版社</th>
+                  <th class="p-3">供應商</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody" class="divide-y divide-slate-100 font-mono">
+                <!-- 動態注入 Products -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: 操作日誌 Logs ==================== -->
+      <section id="tab-logs" class="tab-content space-y-6">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-slate-700 rounded-full inline-block"></span>
+              <span>系統操作審計日誌 (Append-Only Audit Log)</span>
+            </h3>
+            <span class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-lock text-emerald-500"></i> 只許新增，禁止修改</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="p-3 w-40">時間 (Timestamp)</th>
+                  <th class="p-3 w-24">執行者</th>
+                  <th class="p-3 w-32">操作類型</th>
+                  <th class="p-3 w-28">目標單號/對象</th>
+                  <th class="p-3">詳細說明 (Message)</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono">
+                <!-- 動態注入 Logs -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 頁尾Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-400">
+      學校訂書 ERP 系統 &copy; 2026 Internal Administration Console
+    </footer>
+
+  </div>
+
+  <!-- ==================== Toast 全局通知組件 ==================== -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- ==================== JavaScript 核心前端邏輯 ==================== -->
+  <script>
+    // 🌐 全局系統狀態 (State)
+    const SYSTEM_PIN = "admin888";
+    let gasApiUrl = localStorage.getItem("GAS_API_URL") || "";
+
+    // 模擬產品庫 (若 GAS 未設定時之備用資料)
+    let mockProducts = [
+      { branch: "灣仔店", school: "ABC小學", grade: "小一", listCode: "SL-P1", seqNo: 1, bookNo: "BK-001", bookName: "中文地道補充練習 1A", price: 100, defaultPrice: 80, publisher: "培生", subject: "中文", supplier: "聯合發行" },
+      { branch: "灣仔店", school: "ABC小學", grade: "小一", listCode: "SL-P1", seqNo: 2, bookNo: "BK-002", bookName: "Primary English Grammar 1A", price: 120, defaultPrice: 96, publisher: "朗文", subject: "英文", supplier: "培生" },
+      { branch: "灣仔店", school: "ABC小學", grade: "小一", listCode: "SL-P1", seqNo: 3, bookNo: "BK-003", bookName: "小學數學思維訓練 1上", price: 90, defaultPrice: 72, publisher: "牛津", subject: "數學", supplier: "牛津" },
+      { branch: "沙田店", school: "XYZ中學", grade: "中四", listCode: "SL-S4", seqNo: 1, bookNo: "BK-101", bookName: "高中香港歷史專題 1", price: 200, defaultPrice: 160, publisher: "現代", subject: "歷史", supplier: "現代" }
+    ];
+
+    let currentDraftItems = [];
+    let mockOrders = [];
+    let mockLogs = [];
+
+    // 初始化載入
+    window.onload = function() {
+      // 預設填入落單日期 YYMMDD
+      const now = new Date();
+      const yymmdd = String(now.getFullYear()).slice(-2) + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+      document.getElementById('draftOrderDate').value = yymmdd;
+      document.getElementById('batchArrivalDate').value = yymmdd;
+      
+      // 載入預設產品與表格
+      renderProductsTable(mockProducts);
+      addSampleLog("系統初始化", "SYSTEM", "後台介面載入完成");
+    };
+
+    // 🔑 登入驗證處理
+    function handleLogin(e) {
+      e.preventDefault();
+      const pin = document.getElementById('loginPin').value;
+      if (pin === SYSTEM_PIN) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('appUI').classList.remove('hidden');
+        showToast("登入成功！歡迎使用 ERP 後台", "success");
+      } else {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      document.getElementById('appUI').classList.add('hidden');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('loginPin').value = '';
+      showToast("已安全登入過出", "info");
+    }
+
+    // 📌 GAS API URL 設定
+    function promptApiUrl() {
+      const url = prompt("請輸入 Google Apps Script 部署網頁應用程式 URL:", gasApiUrl);
+      if (url !== null) {
+        gasApiUrl = url.trim();
+        localStorage.setItem("GAS_API_URL", gasApiUrl);
+        showToast("API URL 已儲存！", "success");
+      }
+    }
+
+    // 📑 頁籤切換
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-blue-500', 'text-white');
+        btn.classList.add('border-transparent', 'text-slate-400');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+      const activeContent = document.getElementById(`tab-${tabId}`);
+      
+      if (activeBtn && activeContent) {
+        activeBtn.classList.add('active', 'border-blue-500', 'text-white');
+        activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        activeContent.classList.add('active');
+      }
+    }
+
+    // ==================== TAB 1: 新開訂單 / 草稿箱邏輯 ====================
+
+    // 輸入序號自動帶出書籍資料
+    function autoFillBySeq() {
+      const school = document.getElementById('quickSchoolSelect').value;
+      const seqNo = parseInt(document.getElementById('quickSeqNo').value);
+      
+      if (!school || isNaN(seqNo)) {
+        document.getElementById('quickBookTitle').value = "";
+        document.getElementById('quickPrice').value = "";
+        return;
+      }
+
+      const found = mockProducts.find(p => p.school === school && p.seqNo === seqNo);
+      if (found) {
+        document.getElementById('quickBookTitle').value = found.bookName;
+        document.getElementById('quickPrice').value = `$${found.price} (折實 $${found.defaultPrice})`;
+      } else {
+        document.getElementById('quickBookTitle').value = "找不到該序號書籍";
+        document.getElementById('quickPrice').value = "";
+      }
+    }
+
+    function addBookToDraft() {
+      const school = document.getElementById('quickSchoolSelect').value;
+      const seqNo = parseInt(document.getElementById('quickSeqNo').value);
+      
+      if (!school || isNaN(seqNo)) {
+        showToast("請先選擇學校及填寫正確的書單序號", "warning");
+        return;
+      }
+
+      const found = mockProducts.find(p => p.school === school && p.seqNo === seqNo);
+      if (!found) {
+        showToast("找不到對應書籍！", "error");
+        return;
+      }
+
+      // 新增至草稿陣列 (預設 0.8 折扣)
+      const defaultDiscount = 0.8;
+      const discountPrice = Math.round(found.price * defaultDiscount);
+
+      currentDraftItems.push({
+        school: found.school,
+        seqNo: found.seqNo,
+        bookNo: found.bookNo,
+        bookName: found.bookName,
+        price: found.price,
+        discount: defaultDiscount,
+        discountPrice: discountPrice,
+        qty: 1,
+        totalPrice: discountPrice * 1
+      });
+
+      renderDraftTable();
+      document.getElementById('quickSeqNo').value = "";
+      document.getElementById('quickBookTitle').value = "";
+      document.getElementById('quickPrice').value = "";
+      showToast(`已加入: ${found.bookName}`, "success");
+    }
+
+    function renderDraftTable() {
+      const tbody = document.getElementById('draftItemsTable');
+      if (currentDraftItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 font-sans">目前草稿暫無書籍，請於上方選擇學校並輸入序號加入。</td></tr>`;
+        document.getElementById('draftTotalSummary').innerText = "0 本 / $0";
+        document.getElementById('draftBadge').innerText = "0";
+        return;
+      }
+
+      let html = "";
+      let totalQty = 0;
+      let totalPriceSum = 0;
+
+      currentDraftItems.forEach((item, index) => {
+        totalQty += item.qty;
+        totalPriceSum += item.totalPrice;
+
+        html += `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold">${item.seqNo}</td>
+            <td class="p-3">${item.school}</td>
+            <td class="p-3 font-mono text-slate-500">${item.bookNo}</td>
+            <td class="p-3 font-sans font-medium text-slate-800">${item.bookName}</td>
+            <td class="p-3 text-slate-400">$${item.price}</td>
+            <td class="p-3">
+              <input type="number" step="0.01" value="${item.discount}" onchange="updateDraftItemDiscount(${index}, this.value)" 
+                     class="w-16 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none">
+            </td>
+            <td class="p-3 text-blue-600">$${item.discountPrice}</td>
+            <td class="p-3">
+              <input type="number" min="1" value="${item.qty}" onchange="updateDraftItemQty(${index}, this.value)" 
+                     class="w-14 px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-center font-mono outline-none">
+            </td>
+            <td class="p-3 font-bold text-slate-900">$${item.totalPrice}</td>
+            <td class="p-3 text-center">
+              <button onclick="removeDraftItem(${index})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      document.getElementById('draftTotalSummary').innerText = `${totalQty} 本 / $${totalPriceSum}`;
+      document.getElementById('draftBadge').innerText = currentDraftItems.length;
+    }
+
+    function updateDraftItemDiscount(index, val) {
+      const discount = parseFloat(val) || 1;
+      currentDraftItems[index].discount = discount;
+      currentDraftItems[index].discountPrice = Math.round(currentDraftItems[index].price * discount);
+      currentDraftItems[index].totalPrice = currentDraftItems[index].discountPrice * currentDraftItems[index].qty;
+      renderDraftTable();
+    }
+
+    function updateDraftItemQty(index, val) {
+      const qty = parseInt(val) || 1;
+      currentDraftItems[index].qty = qty;
+      currentDraftItems[index].totalPrice = currentDraftItems[index].discountPrice * qty;
+      renderDraftTable();
+    }
+
+    function removeDraftItem(index) {
+      currentDraftItems.splice(index, 1);
+      renderDraftTable();
+    }
+
+    function applyBulkDiscount() {
+      const bulkDiscount = parseFloat(document.getElementById('bulkDiscountInput').value);
+      if (isNaN(bulkDiscount)) {
+        showToast("請輸入有效的批次折扣數值 (例如 0.8)", "warning");
+        return;
+      }
+      currentDraftItems.forEach(item => {
+        item.discount = bulkDiscount;
+        item.discountPrice = Math.round(item.price * bulkDiscount);
+        item.totalPrice = item.discountPrice * item.qty;
+      });
+      renderDraftTable();
+      showToast(`已批次將所有草稿套用 ${bulkDiscount} 折扣`, "success");
+    }
+
+    // 儲存草稿至 GAS
+    function saveDraftAction() {
+      const orderId = document.getElementById('draftOrderId').value.trim();
+      const customerName = document.getElementById('draftCustomerName').value.trim();
+      const phone = document.getElementById('draftPhone').value.trim();
+
+      if (!orderId || !customerName || !phone) {
+        showToast("請填寫實體單號、客人姓名及電話！", "warning");
+        return;
+      }
+
+      if (currentDraftItems.length === 0) {
+        showToast("草稿箱內無任何書籍！", "warning");
+        return;
+      }
+
+      const payload = {
+        action: "saveDraft",
+        orderId: orderId,
+        orderDate: document.getElementById('draftOrderDate').value,
+        customerName: customerName,
+        phone: phone,
+        items: currentDraftItems,
+        remark: document.getElementById('draftRemark').value,
+        operator: "Admin"
+      };
+
+      sendGasApi(payload, (res) => {
+        showToast(res.message || "草稿已儲存", "success");
+        addSampleLog("新增/修改草稿", orderId, `包含 ${currentDraftItems.length} 項商品`);
+      });
+    }
+
+    // 劃花作廢
+    function voidDraftAction() {
+      const orderId = document.getElementById('draftOrderId').value.trim();
+      if (!orderId) {
+        showToast("請輸入要劃花作廢的實體單號！", "warning");
+        return;
+      }
+
+      if (!confirm(`確定要將實體單號 [${orderId}] 標記為【劃花作廢】嗎？此單號將永久鎖定！`)) return;
+
+      const payload = {
+        action: "voidDraft",
+        orderId: orderId,
+        reason: document.getElementById('draftRemark').value || "劃花廢單",
+        operator: "Admin"
+      };
+
+      sendGasApi(payload, (res) => {
+        showToast(res.message || "單號已劃花作廢", "error");
+        addSampleLog("劃花作廢單號", orderId, "單號已鎖定");
+        currentDraftItems = [];
+        renderDraftTable();
+      });
+    }
+
+    // ✅ 確認過數轉入 Orders 大表
+    function commitToOrdersAction() {
+      const orderId = document.getElementById('draftOrderId').value.trim();
+      if (!orderId) {
+        showToast("請輸入實體單號！", "warning");
+        return;
+      }
+
+      const payload = {
+        action: "commitToOrders",
+        orderId: orderId,
+        operator: "Admin"
+      };
+
+      sendGasApi(payload, (res) => {
+        showToast(res.message || "過數成功！已轉入 Orders 大表", "success");
+        addSampleLog("轉入正式大表", orderId, "核對過數成功");
+        
+        // 本地模擬新增至 Orders
+        const orderDate = document.getElementById('draftOrderDate').value;
+        const custName = document.getElementById('draftCustomerName').value;
+        const phone = document.getElementById('draftPhone').value;
+
+        currentDraftItems.forEach(item => {
+          mockOrders.push({
+            orderId: orderId,
+            orderDate: orderDate,
+            customerName: custName,
+            phone: phone,
+            school: item.school,
+            bookNo: item.bookNo,
+            bookName: item.bookName,
+            totalPrice: item.totalPrice,
+            orderDateOrder: "",
+            arrivalDate: "",
+            notifyDate: "",
+            pickupDate: "",
+            cancelDate: "",
+            internalStatus: "新訂單",
+            publicStatus: "新訂單"
+          });
+        });
+
+        renderOrdersTable(mockOrders);
+        currentDraftItems = [];
+        renderDraftTable();
+        switchTab('orders');
+      });
+    }
+
+    // ==================== TAB 2: 訂單進度管理與智能配貨 ====================
+
+    function renderOrdersTable(orders) {
+      const tbody = document.getElementById('ordersTableBody');
+      if (orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-slate-400 font-sans">大表中暫無訂單紀錄</td></tr>`;
+        return;
+      }
+
+      let html = "";
+      orders.forEach((o, index) => {
+        html += `
+          <tr class="hover:bg-slate-50 border-b border-slate-100">
+            <td class="p-3 font-bold text-blue-600">${o.orderId}</td>
+            <td class="p-3 text-slate-500">${o.orderDate}</td>
+            <td class="p-3 font-sans">
+              <div class="font-semibold text-slate-800">${o.customerName}</div>
+              <div class="text-[11px] text-slate-400 font-mono">${o.phone}</div>
+            </td>
+            <td class="p-3 font-sans text-slate-600">${o.school}</td>
+            <td class="p-3 font-sans">
+              <div class="font-medium text-slate-900">${o.bookName}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${o.bookNo}</div>
+            </td>
+            <td class="p-3 font-bold text-slate-900">$${o.totalPrice}</td>
+
+            <!-- 日期輸入框區 -->
+            <td class="p-2 bg-slate-50/50">
+              <input type="text" value="${o.orderDateOrder || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'orderDateOrder', this.value)"
+                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
+            </td>
+            <td class="p-2 bg-slate-50/50">
+              <input type="text" value="${o.arrivalDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'arrivalDate', this.value)"
+                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
+            </td>
+            <td class="p-2 bg-slate-50/50">
+              <input type="text" value="${o.notifyDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'notifyDate', this.value)"
+                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
+            </td>
+            <td class="p-2 bg-slate-50/50">
+              <input type="text" value="${o.pickupDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'pickupDate', this.value)"
+                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
+            </td>
+            <td class="p-2 bg-slate-50/50">
+              <input type="text" value="${o.cancelDate || ''}" placeholder="261031" onchange="updateOrderDate(${index}, 'cancelDate', this.value)"
+                     class="w-16 px-1.5 py-1 bg-white border border-slate-200 rounded text-center text-[11px] outline-none">
+            </td>
+
+            <!-- 內部狀態 Badge -->
+            <td class="p-3">${getStatusBadge(o.internalStatus)}</td>
+
+            <!-- 外部公開狀態 Badge -->
+            <td class="p-3">${getStatusBadge(o.publicStatus)}</td>
+
+            <td class="p-3 text-center">
+              <button onclick="saveSingleOrderLifecycle(${index})" class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200">
+                更新
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // 內部狀態自動推導與更新
+    function updateOrderDate(index, field, value) {
+      mockOrders[index][field] = value.trim();
+      
+      // 自動推導內部狀態
+      const o = mockOrders[index];
+      if (o.cancelDate) o.internalStatus = "已取消";
+      else if (o.pickupDate) o.internalStatus = "已完成";
+      else if (o.arrivalDate || o.notifyDate) o.internalStatus = "已到貨(可到店取)";
+      else if (o.orderDateOrder) o.internalStatus = "在訂中";
+      else o.internalStatus = "新訂單";
+
+      renderOrdersTable(mockOrders);
+    }
+
+    function getStatusBadge(status) {
+      switch(status) {
+        case "新訂單": return `<span class="bg-slate-100 text-slate-700 text-[10px] px-2 py-0.5 rounded-full border border-slate-300 font-sans">新訂單</span>`;
+        case "在訂中": return `<span class="bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded-full border border-amber-300 font-sans">在訂中</span>`;
+        case "已到貨(可到店取)": return `<span class="bg-emerald-50 text-emerald-700 font-bold text-[10px] px-2 py-0.5 rounded-full border border-emerald-300 font-sans">已到貨(可取)</span>`;
+        case "已完成": return `<span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-300 font-sans">已完成</span>`;
+        case "已取消": return `<span class="bg-red-50 text-red-600 text-[10px] px-2 py-0.5 rounded-full border border-red-300 font-sans">已取消</span>`;
+        default: return `<span class="text-slate-400 text-[10px] font-sans">${status || '未知'}</span>`;
+      }
+    }
+
+    // 智能批次配貨
+    function executeBatchArrival() {
+      const bookNo = document.getElementById('batchBookNo').value.trim();
+      const arrivalDate = document.getElementById('batchArrivalDate').value.trim();
+
+      if (!bookNo) {
+        showToast("請輸入要配貨的產品代號/書號！", "warning");
+        return;
+      }
+
+      let count = 0;
+      mockOrders.forEach(o => {
+        if (o.bookNo === bookNo && !o.arrivalDate && !o.pickupDate && !o.cancelDate) {
+          o.arrivalDate = arrivalDate;
+          o.internalStatus = "已到貨(可到店取)";
+          count++;
+        }
+      });
+
+      renderOrdersTable(mockOrders);
+      showToast(`書號 [${bookNo}] 批次配貨完成，共更新 ${count} 張訂單！`, "success");
+      addSampleLog("智能批次配貨", bookNo, `完成批次到貨，更新 ${count} 張單`);
+    }
+
+    function filterOrdersTable() {
+      const search = document.getElementById('orderSearchInput').value.toLowerCase();
+      const status = document.getElementById('statusFilterSelect').value;
+
+      const filtered = mockOrders.filter(o => {
+        const matchSearch = o.orderId.toLowerCase().includes(search) || o.phone.includes(search) || o.customerName.includes(search);
+        const matchStatus = !status || o.internalStatus === status;
+        return matchSearch && matchStatus;
+      });
+
+      renderOrdersTable(filtered);
+    }
+
+    // ==================== TAB 3: 書單庫主檔 ====================
+
+    function renderProductsTable(products) {
+      const tbody = document.getElementById('productsTableBody');
+      document.getElementById('productCount').innerText = products.length;
+
+      let html = "";
+      products.forEach(p => {
+        html += `
+          <tr class="hover:bg-slate-50 border-b border-slate-100">
+            <td class="p-3 font-sans text-slate-500">${p.branch}</td>
+            <td class="p-3 font-sans font-semibold text-slate-800">${p.school}</td>
+            <td class="p-3 font-sans">${p.grade}</td>
+            <td class="p-3 font-bold text-blue-600">${p.seqNo}</td>
+            <td class="p-3 text-slate-500">${p.bookNo}</td>
+            <td class="p-3 font-sans font-medium text-slate-900">${p.bookName}</td>
+            <td class="p-3 text-slate-400">$${p.price}</td>
+            <td class="p-3 font-bold text-emerald-600">$${p.defaultPrice}</td>
+            <td class="p-3 font-sans text-slate-600">${p.publisher}</td>
+            <td class="p-3 font-sans text-slate-500">${p.supplier}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    // ==================== TAB 4: 日誌 Logs ====================
+
+    function addSampleLog(action, target, details) {
+      const nowStr = new Date().toLocaleString('zh-HK');
+      mockLogs.unshift({
+        time: nowStr,
+        operator: "Admin",
+        action: action,
+        target: target,
+        details: details
+      });
+      renderLogsTable();
+    }
+
+    function renderLogsTable() {
+      const tbody = document.getElementById('logsTableBody');
+      let html = "";
+      mockLogs.forEach(l => {
+        html += `
+          <tr class="hover:bg-slate-50 border-b border-slate-100">
+            <td class="p-3 text-slate-400 text-[11px]">${l.time}</td>
+            <td class="p-3 font-semibold text-slate-700">${l.operator}</td>
+            <td class="p-3 font-bold text-blue-600">${l.action}</td>
+            <td class="p-3 text-slate-500">${l.target}</td>
+            <td class="p-3 font-sans text-slate-700">${l.details}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    // ==================== GAS API 通訊工具 ====================
+    function sendGasApi(payload, callback) {
+      if (!gasApiUrl) {
+        console.warn("未設定 GAS API URL，使用前端本地模擬運作。");
+        setTimeout(() => callback({ status: "success", message: "（展示模式：本地模擬成功）" }), 300);
+        return;
+      }
+
+      fetch(gasApiUrl, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success") {
+          callback(data);
+        } else {
+          showToast(data.message || "操作失敗", "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        showToast("網路連線錯誤或 API 失敗", "error");
+      });
+    }
+
+    // Toast 通知 UI
+    function showToast(msg, type = "info") {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      let bg = "bg-slate-900 text-white";
+      if (type === "success") bg = "bg-emerald-600 text-white shadow-emerald-500/20";
+      if (type === "error") bg = "bg-red-600 text-white shadow-red-500/20";
+      if (type === "warning") bg = "bg-amber-500 text-white shadow-amber-500/20";
+
+      toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-xl shadow-xl text-xs font-medium transition-all transform translate-y-2 opacity-0 ${bg}`;
+      toast.innerHTML = `<span>${msg}</span>`;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
