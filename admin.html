@@ -399,7 +399,7 @@
     const SYSTEM_PIN = "admin888";
     
     // 🌐 請在此處填入你的 GAS /exec 網址
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
+    const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL";
 
     let mockProducts = [
       { branch: "灣仔店", school: "ABC小學", grade: "小一", seqNo: 1, bookNo: "BK-001", bookName: "英文常規課本 1A", price: 150, defaultPrice: 120 },
@@ -453,7 +453,7 @@
     }
 
     function fetchAllDataFromGas() {
-      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec") {
         showToast("尚未設定正確的 GAS 網址，目前使用本地預設數據", "warning");
         populateBranchDropdown();
         return;
