@@ -53,8 +53,11 @@
         </div>
 
         <div class="card">
-            <label for="phoneInput">聯絡電話（全組電話）：</label>
-            <input type="text" id="phoneInput" placeholder="例如: 91234567" onkeypress="handleKey(event, 'search')">
+            <label for="phoneInput">聯絡電話（支援全組或最後 4 位）：</label>
+            <input type="text" id="phoneInput" placeholder="例如: 91234567 或 4567" onkeypress="handleKey(event, 'orderSuffixInput')">
+
+            <label for="orderSuffixInput">任一訂單編號最後 4 位數字：</label>
+            <input type="text" id="orderSuffixInput" placeholder="例如: 1024" onkeypress="handleKey(event, 'search')">
 
             <button onclick="searchOrders()">立即安全查詢</button>
             <div id="resultArea"></div>
@@ -67,14 +70,18 @@
         </div>
     </div>
 
-    <div class="version-badge">Ver: 20261031-003-exec</div>
+    <div class="version-badge">Ver: 20261031-004-exec-auth</div>
 
     <script>
-        // 支援 Enter 鍵觸發查詢
-        function handleKey(e, action) {
+        // 支援 Enter 鍵跳行或觸發查詢
+        function handleKey(e, nextAction) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                searchOrders();
+                if (nextAction === 'search') {
+                    searchOrders();
+                } else {
+                    document.getElementById(nextAction).focus();
+                }
             }
         }
 
@@ -83,10 +90,11 @@
 
         async function searchOrders() {
             let phoneInput = document.getElementById('phoneInput').value.trim();
+            let orderSuffix = document.getElementById('orderSuffixInput').value.trim();
             let resultArea = document.getElementById('resultArea');
 
-            if (phoneInput === "") {
-                resultArea.innerHTML = `<p class="error-msg">請完整填寫登記的聯絡電話！</p>`;
+            if (phoneInput === "" || orderSuffix === "") {
+                resultArea.innerHTML = `<p class="error-msg">請完整填寫電話及訂單最後 4 位數字！</p>`;
                 return;
             }
 
@@ -98,21 +106,28 @@
             resultArea.innerHTML = `<p style="text-align:center; color:#666; margin-top:10px;">安全驗證中，請稍候...</p>`;
 
             try {
-                // 呼叫 GAS 後端的 doGet(e)，帶入 phone 參數
+                // 向 GAS API 取得該電話號碼對應的資料
                 let response = await fetch(`${GAS_WEB_APP_URL}?phone=${encodeURIComponent(phoneInput)}`);
                 let result = await response.json();
 
                 if (result.status === "success") {
-                    let orders = result.data;
+                    let userOrders = result.data || [];
 
-                    if (!orders || orders.length === 0) {
-                        resultArea.innerHTML = `<p class="error-msg">搵唔到符合呢個電話嘅記錄，請確認電話號碼是否正確。</p>`;
+                    // 1. 安全比對：驗證該電話名下，是否有「任意一張訂單」的尾數符合輸入的 4 位單號
+                    let hasValidAuth = userOrders.some(item => {
+                        let orderIdStr = String(item.orderId || "").trim();
+                        return orderIdStr.endsWith(orderSuffix) || orderIdStr.includes(orderSuffix);
+                    });
+
+                    // 2. 驗證失敗處理
+                    if (userOrders.length === 0 || !hasValidAuth) {
+                        resultArea.innerHTML = `<p class="error-msg">搵唔到符合嘅記錄，請確認輸入嘅電話同訂單編號是否正確。</p>`;
                         return;
                     }
 
-                    // 將回傳的訂單依照單號 (orderId) 分組顯示
+                    // 3. 驗證成功！將名下的所有訂單打包呈現
                     let ordersMap = {};
-                    orders.forEach(item => {
+                    userOrders.forEach(item => {
                         let orderId = item.orderId || "未分類訂單";
                         if (!ordersMap[orderId]) {
                             ordersMap[orderId] = {
@@ -129,14 +144,14 @@
                         });
                     });
 
-                    let html = `<h3 style="margin: 15px 0 10px 0; font-size:1.1rem; color:#444; text-align:left;">為你找到以下訂單：</h3>`;
+                    let html = `<h3 style="margin: 15px 0 10px 0; font-size:1.1rem; color:#444; text-align:left;">為你找到以下名下所有訂單：</h3>`;
                     
                     for (let orderId in ordersMap) {
                         let ord = ordersMap[orderId];
                         
                         let itemsHtml = ord.items.map(i => {
                             let qtyDisplay = `<span class="item-qty">x${i.qty} 件</span>`;
-                            let dateDisplay = i.updateDate ? `<span class="item-date">更新: ${i.updateDate.substring(0, 10)}</span>` : '';
+                            let dateDisplay = i.updateDate ? `<span class="item-date">更新: ${String(i.updateDate).substring(0, 10)}</span>` : '';
                             
                             return `
                                 <li class="item-row">
