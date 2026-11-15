@@ -135,7 +135,7 @@
           </div>
           <div>
             <h1 class="font-bold text-base tracking-wide leading-none">門巿學校訂書 ERP</h1>
-            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v3.4</span>
+            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v3.6</span>
           </div>
         </div>
 
@@ -412,14 +412,14 @@
           </div>
         </div>
 
-	  <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-            <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
-		    <tr>
-                    <th class="p-3 w-10 text-center">
-                      <input type="checkbox" id="selectAllDraftsCheckbox" onchange="toggleSelectAllVisibleDrafts()" class="w-4 h-4 rounded accent-blue-500 cursor-pointer">
-                    </th>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
+                <tr>
+                  <th class="p-3 w-10 text-center">
+                    <input type="checkbox" id="selectAllDraftsCheckbox" onchange="toggleSelectAllVisibleDrafts()" class="w-4 h-4 rounded accent-blue-500 cursor-pointer">
+                  </th>
                   <th class="p-3">落單日期</th>
                   <th class="p-3 font-mono">實體單號</th>
                   <th class="p-3">學生名稱</th>
@@ -447,12 +447,18 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
             <h3 class="font-bold text-slate-900 flex items-center space-x-2">
               <span class="w-2 h-5 bg-indigo-600 rounded-full inline-block"></span>
-              <span>訂單生命週期追蹤</span>
+              <span>訂單生命週期追蹤（支援減書 / 取消 / 補加書籍）</span>
             </h3>
-            <button onclick="fetchOrdersFromGas()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1 self-start">
-              <i class="fa-solid fa-rotate"></i>
-              <span>重新整理</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openAddBooksModal()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span>現有訂單補加書籍</span>
+              </button>
+              <button onclick="fetchOrdersFromGas()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1">
+                <i class="fa-solid fa-rotate"></i>
+                <span>重新整理</span>
+              </button>
+            </div>
           </div>
 
           <div class="flex flex-wrap items-end justify-between gap-4">
@@ -482,12 +488,12 @@
           </div>
         </div>
 
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-            <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
-              <table class="w-full text-left border-collapse text-xs">
-		<thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
-                  <tr>
-                    <th class="p-3 font-mono">訂單號</th>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
+                <tr>
+                  <th class="p-3 font-mono">訂單號</th>
                   <th class="p-3">落單日</th>
                   <th class="p-3">客人 / 電話</th>
                   <th class="p-3">學校 / 年級</th>
@@ -497,6 +503,7 @@
                   <th class="p-3 text-right">金額</th>
                   <th class="p-3">內部狀態 / 更新日期</th>
                   <th class="p-3">對外公開狀態 / 更新日期</th>
+                  <th class="p-3 text-center">調整</th>
                 </tr>
               </thead>
               <tbody id="ordersTableBody" class="divide-y divide-slate-100 font-mono"></tbody>
@@ -518,9 +525,14 @@
               <i class="fa-solid fa-barcode"></i>
               <span>2. 到貨點貨配貨</span>
             </button>
+            <button onclick="switchAllocSubTab('notify')" id="allocBtn-notify" class="alloc-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-bell"></i>
+              <span>3. 通知客人</span>
+              <span id="notifyBadge" class="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-mono">0</span>
+            </button>
             <button onclick="switchAllocSubTab('pickup')" id="allocBtn-pickup" class="alloc-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center space-x-2">
               <i class="fa-solid fa-hand-holding-heart"></i>
-              <span>3. 門市取貨核對</span>
+              <span>4. 門市取貨核對</span>
             </button>
           </div>
           <button onclick="refreshAllocationData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1">
@@ -550,10 +562,10 @@
               </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button onclick="exportShortageCsv()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-2 rounded-xl transition-all flex items-center space-x-1.5">
-                <i class="fa-solid fa-file-csv"></i>
-                <span>匯出訂貨單 (CSV)</span>
-              </button>
+		<button onclick="exportShortageDat()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-2 rounded-xl transition-all flex items-center space-x-1.5">
+  		 <i class="fa-solid fa-file-lines"></i>
+  	 	 <span>匯出訂貨單 (.dat)</span>
+		</button>
               <button onclick="confirmPurchaseOrderAction()" id="confirmPurchaseBtn" class="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl shadow-sm transition-all flex items-center space-x-1.5">
                 <i class="fa-solid fa-paper-plane"></i>
                 <span>確認已訂貨 (轉為在訂中)</span>
@@ -561,7 +573,7 @@
             </div>
           </div>
 
-	  <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
             <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
               <table class="w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
@@ -652,7 +664,79 @@
           </div>
         </div>
 
-        <!-- 子分頁 3: 門市取貨核對 -->
+        <!-- 子分頁 3: 通知客人 (齊貨 / 過半到貨 / 中英文篩選 / 內部狀態改為已通知到貨) -->
+        <div id="allocSub-notify" class="alloc-subtab space-y-4">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">通知客人到貨（內部狀態改為【已通知到貨】，不影響對外查詢）</h4>
+                <p class="text-xs text-slate-500">系統自動計算未取貨書籍：<strong>齊貨</strong>必通知；<strong>過半到貨</strong>（且該批未通知過）亦會列出，通知後若未取貨則等齊書再通知，若已取走部分書則餘數過半時再通知。</p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <label class="text-[11px] font-bold text-slate-600">通知日期:</label>
+                <input type="date" id="notifyDateInput" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs outline-none">
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl">
+                  <button onclick="setNotifyTypeFilter('all')" id="notifyTypeBtn-all" class="notify-type-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm">全部 (<span id="notifyCountAll">0</span>)</button>
+                  <button onclick="setNotifyTypeFilter('full')" id="notifyTypeBtn-full" class="notify-type-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900">齊貨通知 (<span id="notifyCountFull">0</span>)</button>
+                  <button onclick="setNotifyTypeFilter('half')" id="notifyTypeBtn-half" class="notify-type-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900">過半到貨 (<span id="notifyCountHalf">0</span>)</button>
+                </div>
+
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl">
+                  <button onclick="setNotifyLangFilter('all')" id="notifyLangBtn-all" class="notify-lang-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm">全部名字</button>
+                  <button onclick="setNotifyLangFilter('zh')" id="notifyLangBtn-zh" class="notify-lang-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900">中文名</button>
+                  <button onclick="setNotifyLangFilter('en')" id="notifyLangBtn-en" class="notify-lang-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900">英文名</button>
+                </div>
+
+                <input type="text" id="notifyKeywordInput" oninput="renderNotifyTable()" placeholder="搜尋單號 / 姓名 / 電話..."
+                       class="w-48 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500">
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+		<button onclick="copySelectedNotifyPhones()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-2 rounded-xl transition-all flex items-center space-x-1.5">
+  		 <i class="fa-regular fa-copy"></i>
+  		 <span>複製已選電話</span>
+		</button>
+		<button onclick="exportSelectedNotifyPhonesTxt()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl transition-all flex items-center space-x-1.5">
+  		 <i class="fa-solid fa-file-arrow-down"></i>
+  		 <span>匯出電話 (.txt)</span>
+		</button>
+                <button onclick="confirmNotifyAction()" id="confirmNotifyBtn" class="text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded-xl shadow-sm transition-all flex items-center space-x-1.5">
+                  <i class="fa-solid fa-check"></i>
+                  <span>確認已通知 (改為已通知到貨)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="overflow-x-auto max-h-[55vh] overflow-y-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
+                  <tr>
+                    <th class="p-3 w-10 text-center">
+                      <input type="checkbox" id="selectAllNotifyCheckbox" onchange="toggleSelectAllNotify()" class="w-4 h-4 rounded accent-purple-500 cursor-pointer">
+                    </th>
+                    <th class="p-3">通知類型</th>
+                    <th class="p-3 font-mono">訂單號</th>
+                    <th class="p-3">客人姓名 (語言)</th>
+                    <th class="p-3 font-mono">聯絡電話</th>
+                    <th class="p-3">學校 / 年級</th>
+                    <th class="p-3 text-center">未取進度 (已到/未取)</th>
+                    <th class="p-3 text-center">快速複製</th>
+                  </tr>
+                </thead>
+                <tbody id="notifyTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子分頁 4: 門市取貨核對 -->
         <div id="allocSub-pickup" class="alloc-subtab space-y-4">
           <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
             <div class="flex flex-wrap items-end justify-between gap-3">
@@ -667,7 +751,7 @@
                   <span>搜尋訂單</span>
                 </button>
                 <button onclick="selectAllArrivedForPickup()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">
-                  全選已到貨
+                  全選已到貨 / 已通知
                 </button>
               </div>
 
@@ -713,7 +797,7 @@
       <section id="tab-products" class="tab-content space-y-6">
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-	    <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
               <span class="w-2 h-5 bg-purple-600 rounded-full inline-block"></span>
               <span>書單庫 Master (學校書單與預設折扣)</span>
             </h3>
@@ -806,6 +890,76 @@
     </footer>
   </div>
 
+  <!-- ➕ 現有訂單補加書籍 Modal -->
+  <div id="addBooksModal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-book-medical text-indigo-600"></i>
+          <span>為現有正式訂單補加書籍</span>
+        </h3>
+        <button onclick="closeAddBooksModal()" class="text-slate-400 hover:text-slate-700">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">實體單號 (10位) <span class="text-red-500">*</span></label>
+          <div class="flex space-x-2">
+		<input type="text" id="addBookOrderIdInput" placeholder="輸入單號查詢..."
+       		 onkeydown="if(event.key==='Enter'){event.preventDefault(); lookupOrderForAddBook();}"
+       		 class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+            <button onclick="lookupOrderForAddBook()" class="bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-xl">載入資料</button>
+          </div>
+        </div>
+        <div id="addBookOrderInfo" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center text-slate-500">
+          請先輸入單號並點擊「載入資料」
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+        <div class="sm:col-span-2">
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">輸入序號（依該單學校/年級）</label>
+          <input type="number" id="addBookSeqInput" placeholder="輸入序號後按加入..." onkeydown="if(event.key==='Enter'){event.preventDefault(); appendBookToAddList();}"
+                 class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono outline-none">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">數量</label>
+          <input type="number" id="addBookQtyInput" value="1" min="1" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-center outline-none">
+        </div>
+        <div class="flex items-end">
+          <button onclick="appendBookToAddList()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 rounded-lg">
+            + 加入清單
+          </button>
+        </div>
+      </div>
+
+      <div class="max-h-48 overflow-y-auto border border-slate-200 rounded-xl">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 text-slate-600">
+            <tr>
+              <th class="p-2">序號</th>
+              <th class="p-2">書號</th>
+              <th class="p-2">書名</th>
+              <th class="p-2 text-center">數量</th>
+              <th class="p-2 text-right">小計</th>
+              <th class="p-2 text-center">移除</th>
+            </tr>
+          </thead>
+          <tbody id="addBooksListBody" class="divide-y divide-slate-100">
+            <tr><td colspan="6" class="p-4 text-center text-slate-400">尚未加入任何書籍</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeAddBooksModal()" class="px-4 py-2 text-xs font-medium bg-slate-100 text-slate-600 rounded-xl">取消</button>
+        <button onclick="submitAddBooksToOrder()" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm">確認補加至正式訂單</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ⏳ Loading 遮罩 -->
   <div id="printLoadingOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center space-y-3 border border-slate-100">
@@ -866,6 +1020,15 @@
     let currentPickupMatches = [];
     let selectedPickupRowIndices = new Set();
 
+    // 通知客人狀態
+    let notifyTypeFilter = 'all'; // 'all' | 'full' | 'half'
+    let notifyLangFilter = 'all'; // 'all' | 'zh' | 'en'
+    let selectedNotifyOrderIds = new Set();
+
+    // 現有訂單補加書籍
+    let addBookBaseOrder = null;
+    let addBooksPendingItems = [];
+
     function getTodayLocal() {
       const now = new Date();
       const y = now.getFullYear();
@@ -924,6 +1087,7 @@
       document.getElementById('draftOrderDate').value = today;
       document.getElementById('purchaseOrderDateInput').value = today;
       document.getElementById('arrivalDateInput').value = today;
+      document.getElementById('notifyDateInput').value = today;
 
       initDynamicGridRows(5);
       renderProductsTable(mockProducts);
@@ -1037,6 +1201,7 @@
         ordersList = data.data || [];
         renderOrdersTable();
         renderShortageTable();
+        renderNotifyTable();
         if (cb) cb();
       });
     }
@@ -2049,7 +2214,7 @@
     }
 
     // =========================================================================
-    // TAB 3: 訂單進度篩選與排序
+    // TAB 3: 訂單進度篩選、改數量、取消、補加書籍
     // =========================================================================
     function onOrderStartDateChange() {
       const startInput = document.getElementById('filterOrderStartDate');
@@ -2092,6 +2257,7 @@
 
     function getStatusBadgeClass(status) {
       if (status === '已取貨' || status === '已完成') return 'bg-emerald-100 text-emerald-700';
+      if (status === '已通知到貨') return 'bg-purple-100 text-purple-700';
       if (status === '已到貨') return 'bg-blue-100 text-blue-700';
       if (status === '在訂中') return 'bg-amber-100 text-amber-700';
       if (status === '已取消') return 'bg-red-100 text-red-700';
@@ -2104,16 +2270,32 @@
       document.getElementById('filteredOrdersCount').innerText = list.length;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400">目前沒有符合條件的正式訂單</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-400">目前沒有符合條件的正式訂單</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = list.map(o => {
+tbody.innerHTML = list.map(o => {
         const internalDate = o.internalUpdateDate || '-';
         const publicDate = o.publicUpdateDate || '-';
+        const displayQty = (o.qty !== undefined && o.qty !== null) ? o.qty : 1;
+        const isPickedUp = o.internalStatus === '已取貨';
+        const isCancelled = o.internalStatus === '已取消';
+        const safeBookName = String(o.bookName || '').replace(/'/g, "\\'");
+
+        let actionHtml = `<span class="text-slate-300 text-[11px]">-</span>`;
+        if (!isPickedUp) {
+          if (isCancelled) {
+            actionHtml = `<button onclick="promptEditQty(${o.rowIndex}, ${displayQty}, '${safeBookName}', true)" class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded">恢復 / 改數量</button>`;
+          } else {
+            actionHtml = `
+              <button onclick="promptEditQty(${o.rowIndex}, ${displayQty}, '${safeBookName}', false)" class="text-[11px] bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-700 px-2 py-1 rounded mr-1">改數量</button>
+              <button onclick="confirmCancelItem(${o.rowIndex}, '${o.orderId}', '${safeBookName}')" class="text-[11px] bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded">取消</button>
+            `;
+          }
+        }
 
         return `
-          <tr class="hover:bg-slate-50">
+          <tr class="hover:bg-slate-50 ${isCancelled ? 'opacity-65 bg-red-50/20' : ''}">
             <td class="p-3 font-bold text-blue-600 whitespace-nowrap">${o.orderId}</td>
             <td class="p-3 text-slate-600 whitespace-nowrap">${formatMonthDay(o.orderDate)}</td>
             <td class="p-3 font-sans">
@@ -2129,7 +2311,7 @@
               <div class="font-mono text-slate-500">${o.bookNo || '-'}</div>
               <div class="text-slate-800 font-medium">${o.bookName || '-'}</div>
             </td>
-            <td class="p-3 text-center font-bold text-slate-800">${o.qty || 1}</td>
+            <td class="p-3 text-center font-bold text-slate-800">${displayQty}</td>
             <td class="p-3 text-right font-bold text-slate-900">$${Number(o.totalPrice || 0).toFixed(1)}</td>
             <td class="p-3 font-sans">
               <span class="px-2 py-0.5 rounded-full font-medium inline-block ${getStatusBadgeClass(o.internalStatus)}">${o.internalStatus || '-'}</span>
@@ -2139,9 +2321,143 @@
               <span class="px-2 py-0.5 rounded-full font-medium inline-block ${getStatusBadgeClass(o.publicStatus)}">${o.publicStatus || '-'}</span>
               <div class="text-[11px] text-slate-400 font-mono mt-1">${publicDate}</div>
             </td>
+            <td class="p-3 text-center font-sans whitespace-nowrap">${actionHtml}</td>
           </tr>
         `;
       }).join('');
+    }
+
+	function promptEditQty(rowIndex, currentQty, bookName, isRestore = false) {
+      const msg = isRestore
+        ? `恢復《${bookName}》為【新訂單】，請輸入訂購數量（預設 1）：`
+        : `修改《${bookName}》的訂購數量（輸入 0 將直接取消此項目）：`;
+      const defaultVal = isRestore ? 1 : currentQty;
+      const input = prompt(msg, defaultVal);
+      if (input === null) return;
+      const newQty = parseInt(input, 10);
+      if (isNaN(newQty) || newQty < 0) {
+        showToast("請輸入有效的整數數量！", "error");
+        return;
+      }
+      if (!isRestore && newQty === currentQty) return;
+      if (isRestore && newQty === 0) return;
+
+      showPrintLoading(isRestore ? "正在恢復訂單為【新訂單】..." : "正在更新數量...");
+      sendGasApi({ action: "updateOrderItemQty", rowIndex: rowIndex, newQty: newQty, operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        fetchOrdersFromGas();
+      }, () => hidePrintLoading());
+    }
+
+    function confirmCancelItem(rowIndex, orderId, bookName) {
+      if (!confirm(`確定要取消單號 [${orderId}] 的《${bookName}》嗎？\n確定後將寫入取消日期 (W 行) 並將內外部狀態改為【已取消】。`)) return;
+      showPrintLoading("正在取消項目...");
+      sendGasApi({ action: "cancelOrderItems", rowIndices: [rowIndex], cancelDate: getTodayLocal(), operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        fetchOrdersFromGas();
+      }, () => hidePrintLoading());
+    }
+
+    // 現有訂單補加書籍 Modal
+    function openAddBooksModal() {
+      addBookBaseOrder = null;
+      addBooksPendingItems = [];
+      document.getElementById('addBookOrderIdInput').value = "";
+      document.getElementById('addBookOrderInfo').innerText = "請先輸入單號並點擊「載入資料」";
+      document.getElementById('addBookSeqInput').value = "";
+      document.getElementById('addBookQtyInput').value = "1";
+      renderAddBooksList();
+      document.getElementById('addBooksModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('addBookOrderIdInput').focus(), 50);
+    }
+
+    function closeAddBooksModal() {
+      document.getElementById('addBooksModal').classList.add('hidden');
+    }
+
+    function lookupOrderForAddBook() {
+      const orderId = document.getElementById('addBookOrderIdInput').value.trim();
+      if (!orderId) return showToast("請輸入實體單號！", "warning");
+      const found = ordersList.find(o => o.orderId === orderId);
+      if (!found) {
+        addBookBaseOrder = null;
+        document.getElementById('addBookOrderInfo').innerHTML = `<span class="text-red-500 font-bold">找不到單號 ${orderId}</span>`;
+        return;
+      }
+      addBookBaseOrder = found;
+      document.getElementById('addBookOrderInfo').innerHTML = `
+        <div class="text-slate-800">
+          <strong>${found.customerName}</strong> (${found.phone})<br>
+          <span class="text-indigo-600">${found.branch}｜${found.school} ${found.grade}</span>
+        </div>`;
+      document.getElementById('addBookSeqInput').focus();
+    }
+
+    function appendBookToAddList() {
+      if (!addBookBaseOrder) return showToast("請先載入有效的訂單單號！", "warning");
+      const seqVal = parseInt(document.getElementById('addBookSeqInput').value, 10);
+      const qtyVal = parseInt(document.getElementById('addBookQtyInput').value, 10) || 1;
+      if (isNaN(seqVal) || seqVal <= 0) return showToast("請輸入有效序號！", "warning");
+
+      const prod = mockProducts.find(p =>
+        String(p.branch).trim() === String(addBookBaseOrder.branch).trim() &&
+        String(p.school).trim() === String(addBookBaseOrder.school).trim() &&
+        String(p.grade).trim() === String(addBookBaseOrder.grade).trim() &&
+        parseInt(p.seqNo, 10) === seqVal
+      );
+      if (!prod) return showToast(`在 ${addBookBaseOrder.school} ${addBookBaseOrder.grade} 找不到序號 ${seqVal}！`, "error");
+
+      const price = parseFloat(prod.price) || 0;
+      const defaultPrice = parseFloat(prod.defaultPrice) || price;
+      const discount = price > 0 ? parseFloat((defaultPrice / price).toFixed(2)) : 0.88;
+      const discountPrice = parseFloat((price * discount).toFixed(1));
+      const totalPrice = parseFloat((discountPrice * qtyVal).toFixed(1));
+
+      addBooksPendingItems.push({
+        school: prod.school,
+        seqNo: prod.seqNo,
+        bookNo: prod.bookNo,
+        bookName: prod.bookName,
+        price: price,
+        discount: discount,
+        discountPrice: discountPrice,
+        qty: qtyVal,
+        totalPrice: totalPrice
+      });
+      document.getElementById('addBookSeqInput').value = "";
+      document.getElementById('addBookQtyInput').value = "1";
+      renderAddBooksList();
+      document.getElementById('addBookSeqInput').focus();
+    }
+
+    function renderAddBooksList() {
+      const tbody = document.getElementById('addBooksListBody');
+      if (addBooksPendingItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">尚未加入任何書籍</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = addBooksPendingItems.map((item, idx) => `
+        <tr>
+          <td class="p-2 font-mono font-bold text-blue-600">${item.seqNo}</td>
+          <td class="p-2 font-mono text-slate-500">${item.bookNo}</td>
+          <td class="p-2">${item.bookName}</td>
+          <td class="p-2 text-center font-mono font-bold">${item.qty}</td>
+          <td class="p-2 text-right font-mono font-bold">$${item.totalPrice.toFixed(1)}</td>
+          <td class="p-2 text-center"><button onclick="addBooksPendingItems.splice(${idx},1); renderAddBooksList();" class="text-red-500">移除</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function submitAddBooksToOrder() {
+      if (!addBookBaseOrder || addBooksPendingItems.length === 0) {
+        return showToast("請先載入單號並加入書籍！", "warning");
+      }
+      showPrintLoading("正在補加書籍至正式訂單...");
+      sendGasApi({ action: "addBooksToOrder", orderId: addBookBaseOrder.orderId, items: addBooksPendingItems, operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        closeAddBooksModal();
+        fetchOrdersFromGas();
+      }, () => hidePrintLoading());
     }
 
     // =========================================================================
@@ -2163,6 +2479,9 @@
           const inp = document.getElementById('arrivalBookNoInput');
           if (inp) inp.focus();
         }, 50);
+      }
+      if (subId === 'notify') {
+        renderNotifyTable();
       }
     }
 
@@ -2303,27 +2622,62 @@
       renderShortageTable();
     }
 
-    function exportShortageCsv() {
+     function convertTo13DigitISBN(rawIsbn) {
+      const cleaned = String(rawIsbn || '').replace(/[-\s]/g, '').trim();
+      if (cleaned.length === 13) return cleaned;
+      if (cleaned.length !== 10) return cleaned;
+
+      const base12 = '978' + cleaned.slice(0, 9);
+      let sum = 0;
+      for (let i = 0; i < 12; i++) {
+        const digit = parseInt(base12[i], 10);
+        if (isNaN(digit)) return cleaned;
+        sum += (i % 2 === 1) ? digit * 3 : digit;
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return base12 + String(checkDigit);
+    }
+
+    function formatDatLine(rawIsbn, qty) {
+      const isbn13 = convertTo13DigitISBN(rawIsbn);
+      // 29個空格 + 13位ISBN + 數量右對齊6格(個位5空格/十位4空格/百位3空格...) + 結尾 '0'
+      return ' '.repeat(29) + isbn13 + String(qty).padStart(6, ' ') + '0';
+    }
+
+    function exportShortageDat() {
       const list = getShortageSummaryList().filter(i => selectedShortageBookNos.size === 0 || selectedShortageBookNos.has(i.bookNo));
       if (list.length === 0) {
         showToast("沒有可匯出的欠書資料！", "warning");
         return;
       }
-      let csv = "\uFEFF供應商,書號/ISBN,書名,涉及訂單數,總訂購數量\n";
-      list.forEach(i => {
-        csv += `"${i.supplier.replace(/"/g, '""')}","${i.bookNo}","${String(i.bookName).replace(/"/g, '""')}",${i.orderIds.size},${i.totalQty}\n`;
+
+      // 按供應商分組，各別匯出 {供應商名}_{YYYY-MM-DD}.dat
+      const bySupplier = {};
+      list.forEach(item => {
+        const sup = (item.supplier || '未指定供應商').replace(/[\\/:*?"<>|]/g, '_');
+        if (!bySupplier[sup]) bySupplier[sup] = [];
+        bySupplier[sup].push(formatDatLine(item.bookNo, item.totalQty));
       });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `欠書訂貨單_${getTodayLocal()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast("已匯出訂貨單 CSV", "success");
+
+      const today = getTodayLocal();
+      const entries = Object.entries(bySupplier);
+      entries.forEach(([supName, lines], idx) => {
+        setTimeout(() => {
+          const content = lines.join('\r\n');
+          const blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${supName}_${today}.dat`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }, idx * 200);
+      });
+
+      showToast(`已匯出 ${entries.length} 個訂貨單 (.dat)`, "success");
     }
 
-    function confirmPurchaseOrderAction() {
+function confirmPurchaseOrderAction() {
       const bookNos = Array.from(selectedShortageBookNos);
       if (bookNos.length === 0) {
         showToast("請先勾選已向供應商訂購的書籍！", "warning");
@@ -2479,7 +2833,253 @@
       }, () => hidePrintLoading());
     }
 
-    // 步驟 3: 門市取貨核對
+    // =========================================================================
+    // 步驟 3: 通知客人邏輯 (齊貨 / 過半到貨 / 中英文名篩選 / 改為已通知到貨)
+    // =========================================================================
+    function getNotifyCandidates() {
+      const orderGroups = {};
+      ordersList.forEach(o => {
+        if (o.internalStatus === '已取消' || o.internalStatus === '已取貨') return;
+        if (!orderGroups[o.orderId]) {
+          orderGroups[o.orderId] = {
+            orderId: o.orderId,
+            customerName: String(o.customerName || '').trim(),
+            phone: String(o.phone || '').trim(),
+            school: o.school || '',
+            grade: o.grade || '',
+            items: []
+          };
+        }
+        orderGroups[o.orderId].items.push(o);
+      });
+
+      const candidates = [];
+      Object.values(orderGroups).forEach(g => {
+        let totalQty = 0;
+        let arrivedQty = 0;
+        const unnotifiedArrivedRows = [];
+        let alreadyNotifiedQty = 0;
+
+        g.items.forEach(item => {
+          const q = Number(item.qty) || 1;
+          totalQty += q;
+          const isArrived = (item.internalStatus === '已到貨' || item.internalStatus === '已通知到貨');
+          if (isArrived) {
+            arrivedQty += q;
+            if (item.internalStatus === '已到貨') {
+              unnotifiedArrivedRows.push(item.rowIndex);
+            } else {
+              alreadyNotifiedQty += q;
+            }
+          }
+        });
+
+        if (totalQty === 0 || unnotifiedArrivedRows.length === 0) return;
+
+        let notifyType = null;
+        if (arrivedQty === totalQty) {
+          notifyType = 'full'; // 齊貨通知
+        } else if (arrivedQty > totalQty / 2 && alreadyNotifiedQty === 0) {
+          notifyType = 'half'; // 過半到貨（且呢批未取貨中之前未通知過）
+        }
+
+        if (notifyType) {
+          const isZh = /[\u4e00-\u9fa5]/.test(g.customerName);
+          candidates.push({
+            orderId: g.orderId,
+            customerName: g.customerName,
+            lang: isZh ? 'zh' : 'en',
+            phone: g.phone,
+            school: g.school,
+            grade: g.grade,
+            totalQty: totalQty,
+            arrivedQty: arrivedQty,
+            notifyType: notifyType,
+            rowIndices: unnotifiedArrivedRows
+          });
+        }
+      });
+
+      return candidates.sort((a, b) => String(a.orderId).localeCompare(String(b.orderId), undefined, { numeric: true }));
+    }
+
+    function setNotifyTypeFilter(type) {
+      notifyTypeFilter = type;
+      document.querySelectorAll('.notify-type-btn').forEach(b => {
+        b.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+        b.classList.add('text-slate-600');
+      });
+      const activeBtn = document.getElementById(`notifyTypeBtn-${type}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+        activeBtn.classList.remove('text-slate-600');
+      }
+      renderNotifyTable();
+    }
+
+    function setNotifyLangFilter(lang) {
+      notifyLangFilter = lang;
+      document.querySelectorAll('.notify-lang-btn').forEach(b => {
+        b.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+        b.classList.add('text-slate-600');
+      });
+      const activeBtn = document.getElementById(`notifyLangBtn-${lang}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+        activeBtn.classList.remove('text-slate-600');
+      }
+      renderNotifyTable();
+    }
+
+    function getFilteredNotifyCandidates() {
+      const all = getNotifyCandidates();
+      const kw = (document.getElementById('notifyKeywordInput')?.value || '').trim().toLowerCase();
+      return all.filter(c => {
+        if (notifyTypeFilter !== 'all' && c.notifyType !== notifyTypeFilter) return false;
+        if (notifyLangFilter !== 'all' && c.lang !== notifyLangFilter) return false;
+        if (kw && !`${c.orderId} ${c.customerName} ${c.phone} ${c.school}`.toLowerCase().includes(kw)) return false;
+        return true;
+      });
+    }
+
+    function renderNotifyTable() {
+      const all = getNotifyCandidates();
+      const fullCount = all.filter(c => c.notifyType === 'full').length;
+      const halfCount = all.filter(c => c.notifyType === 'half').length;
+
+      document.getElementById('notifyBadge').innerText = all.length;
+      document.getElementById('notifyCountAll').innerText = all.length;
+      document.getElementById('notifyCountFull').innerText = fullCount;
+      document.getElementById('notifyCountHalf').innerText = halfCount;
+
+      const list = getFilteredNotifyCandidates();
+      const tbody = document.getElementById('notifyTableBody');
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">目前沒有符合條件的待通知客人</td></tr>`;
+        document.getElementById('selectAllNotifyCheckbox').checked = false;
+        return;
+      }
+
+      let allSelected = true;
+      tbody.innerHTML = list.map(c => {
+        const checked = selectedNotifyOrderIds.has(c.orderId);
+        if (!checked) allSelected = false;
+        const typeBadge = c.notifyType === 'full'
+          ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">齊貨通知</span>`
+          : `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">過半到貨</span>`;
+        const langBadge = c.lang === 'zh'
+          ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 ml-1">中</span>`
+          : `<span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 ml-1">EN</span>`;
+
+        return `
+          <tr class="hover:bg-purple-50/40">
+            <td class="p-3 text-center">
+              <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleNotifySelect('${c.orderId}')" class="w-4 h-4 rounded accent-purple-600 cursor-pointer">
+            </td>
+            <td class="p-3">${typeBadge}</td>
+            <td class="p-3 font-mono font-bold text-blue-600">${c.orderId}</td>
+            <td class="p-3 font-medium text-slate-900">${c.customerName}${langBadge}</td>
+            <td class="p-3 font-mono font-bold text-slate-700">${c.phone}</td>
+            <td class="p-3"><div>${c.school}</div><div class="text-slate-400">${c.grade}</div></td>
+            <td class="p-3 text-center font-mono font-bold"><span class="text-purple-700">${c.arrivedQty}</span> / ${c.totalQty} 本</td>
+            <td class="p-3 text-center">
+              <button onclick="copySingleNotifyMsg('${c.orderId}')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg">
+                <i class="fa-regular fa-copy mr-1"></i>複製電話
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('selectAllNotifyCheckbox').checked = allSelected;
+    }
+
+    function toggleNotifySelect(orderId) {
+      if (selectedNotifyOrderIds.has(orderId)) selectedNotifyOrderIds.delete(orderId);
+      else selectedNotifyOrderIds.add(orderId);
+      renderNotifyTable();
+    }
+
+    function toggleSelectAllNotify() {
+      const checked = document.getElementById('selectAllNotifyCheckbox').checked;
+      getFilteredNotifyCandidates().forEach(c => {
+        if (checked) selectedNotifyOrderIds.add(c.orderId);
+        else selectedNotifyOrderIds.delete(c.orderId);
+      });
+      renderNotifyTable();
+    }
+
+    function copySingleNotifyMsg(orderId) {
+      const item = getNotifyCandidates().find(c => c.orderId === orderId);
+      if (!item) return;
+      navigator.clipboard.writeText(item.phone).then(() => {
+        showToast(`已複製 ${item.customerName} 的電話：${item.phone}`, "success");
+      });
+    }
+
+function getUniqueSelectedNotifyPhones() {
+      const list = getFilteredNotifyCandidates().filter(c => selectedNotifyOrderIds.has(c.orderId));
+      if (list.length === 0) return [];
+      const uniquePhones = [];
+      const seen = new Set();
+      list.forEach(c => {
+        const phone = String(c.phone || '').trim();
+        if (phone && !seen.has(phone)) {
+          seen.add(phone);
+          uniquePhones.push(phone);
+        }
+      });
+      return uniquePhones;
+    }
+
+    function copySelectedNotifyPhones() {
+      const phones = getUniqueSelectedNotifyPhones();
+      if (phones.length === 0) return showToast("請先勾選要複製電話的客人！", "warning");
+      navigator.clipboard.writeText(phones.join('\n')).then(() => {
+        showToast(`已複製 ${phones.length} 個純電話號碼！`, "success");
+      });
+    }
+
+    function exportSelectedNotifyPhonesTxt() {
+      const phones = getUniqueSelectedNotifyPhones();
+      if (phones.length === 0) return showToast("請先勾選要匯出電話的客人！", "warning");
+
+      const langLabel = notifyLangFilter === 'zh' ? '中文' : (notifyLangFilter === 'en' ? '英文' : '');
+      const typeLabel = notifyTypeFilter === 'full' ? '全齊' : (notifyTypeFilter === 'half' ? '半齊' : '');
+      const prefix = (langLabel + typeLabel) || '全部';
+      const filename = `${prefix}通知電話_${getTodayLocal()}.txt`;
+
+      const blob = new Blob([phones.join('\r\n')], { type: "text/plain;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showToast(`已匯出 ${phones.length} 個電話至 ${filename}`, "success");
+    }
+
+    function confirmNotifyAction() {
+      const list = getFilteredNotifyCandidates().filter(c => selectedNotifyOrderIds.has(c.orderId));
+      if (list.length === 0) return showToast("請先勾選已通知的客人！", "warning");
+
+      const rowIndices = [];
+      list.forEach(c => rowIndices.push(...c.rowIndices));
+      const notifyDate = document.getElementById('notifyDateInput').value || getTodayLocal();
+
+      if (!confirm(`確認已通知這 ${list.length} 張訂單的客人？\n確定後這 ${rowIndices.length} 筆已到貨書籍的內部狀態將改為【已通知到貨】。`)) return;
+
+      showPrintLoading("正在更新內部狀態為【已通知到貨】...");
+      sendGasApi({ action: "confirmNotifyByRows", rowIndices: rowIndices, notifyDate: notifyDate, operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        selectedNotifyOrderIds.clear();
+        fetchOrdersFromGas();
+      }, () => hidePrintLoading());
+    }
+
+    // 步驟 4: 門市取貨核對
     function searchPickupOrders() {
       const kw = document.getElementById('pickupSearchInput').value.trim().toLowerCase();
       if (!kw) {
@@ -2496,7 +3096,7 @@
 
     function selectAllArrivedForPickup() {
       currentPickupMatches.forEach(o => {
-        if (o.internalStatus === '已到貨') {
+        if (o.internalStatus === '已到貨' || o.internalStatus === '已通知到貨') {
           selectedPickupRowIndices.add(o.rowIndex);
         }
       });
@@ -2527,7 +3127,7 @@
       document.getElementById('pickupSelectedSummary').innerText = `${totalQty} 本 / $${totalPrice.toFixed(1)}`;
 
       tbody.innerHTML = currentPickupMatches.map(o => {
-        const canPickup = o.internalStatus === '已到貨';
+        const canPickup = (o.internalStatus === '已到貨' || o.internalStatus === '已通知到貨');
         const checked = selectedPickupRowIndices.has(o.rowIndex);
         return `
           <tr class="hover:bg-blue-50/40 ${canPickup ? '' : 'opacity-65 bg-slate-50/60'}">
@@ -2553,7 +3153,7 @@
     function confirmPickupAction() {
       const rowIndices = Array.from(selectedPickupRowIndices);
       if (rowIndices.length === 0) {
-        showToast("請先勾選客人要領取的【已到貨】書籍！", "warning");
+        showToast("請先勾選客人要領取的【已到貨 / 已通知到貨】書籍！", "warning");
         return;
       }
       const summary = document.getElementById('pickupSelectedSummary').innerText;
