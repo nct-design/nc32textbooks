@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="robots" content="noindex, nofollow">
+
+  <title>學校訂書 ERP 後台管理系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .alloc-subtab { display: none; }
+    .alloc-subtab.active { display: block; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    input::-ms-reveal,
+    input::-ms-clear {
+      display: none;
+    }
+    input[type="password"]::-webkit-credentials-auto-fill-button,
+    input[type="password"]::-webkit-contacts-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+      height: 0;
+      width: 0;
+      margin: 0;
+    }
+
+    @media print {
+      @page {
+        size: auto;
+        margin: 9mm 10mm 10mm 12mm;
+      }
+      body > *:not(#printableReceipt) { display: none !important; }
+      #printableReceipt {
+        display: block !important;
+        visibility: visible !important;
+        position: relative;
+        width: 190mm;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        color: #000 !important;
+      }
+      .print-page {
+        position: relative;
+        width: 190mm;
+        height: 205mm;
+        overflow: hidden;
+        page-break-after: always;
+      }
+      .print-page:last-child {
+        page-break-after: auto;
+      }
+      .print-abs {
+        position: absolute;
+        box-sizing: border-box;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.15;
+        overflow: hidden;
+      }
+      .print-grid-table {
+        width: 188mm;
+        table-layout: fixed;
+        border-collapse: collapse;
+        font-size: 8pt;
+      }
+      .print-grid-table th,
+      .print-grid-table td {
+        border: 1px solid #000;
+        padding: 1px 2px;
+        vertical-align: middle;
+        box-sizing: border-box;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- 1. 登入介面 -->
+  <div id="loginOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-book-bookmark"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">ERP 後台管理系統</h2>
+        <p class="text-slate-500 text-sm mt-1">請輸入管理員 PIN 密碼登入</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
+            管理員密碼
+          </label>
+          <div class="relative">
+            <input type="password" id="loginPin" placeholder="請輸入管理員密碼" required
+                   class="w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none font-mono text-sm">
+            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400"></i>
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-700 focus:outline-none">
+              <i id="eyeIcon" class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2">
+          <span>安全登入</span>
+          <i class="fa-solid fa-arrow-right text-sm"></i>
+        </button>
+      </form>
+      
+      <div id="loginError" class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs text-center font-medium">
+        密碼錯誤或系統驗證失敗，請重新輸入！
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 主頁面介面 -->
+  <div id="appUI" class="hidden flex-1 flex flex-col">
+    <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-lg font-bold shadow-md shadow-blue-500/30">
+            <i class="fa-solid fa-book-open"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-base tracking-wide leading-none">門巿學校訂書 ERP</h1>
+            <span class="text-[10px] text-blue-400 font-mono tracking-wider">ADMIN CONSOLE v3.4</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <button onclick="handleLogout()" class="text-xs bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>登出</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 導航 -->
+      <div class="bg-slate-800/80 border-t border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 overflow-x-auto no-scrollbar">
+          <button onclick="switchTab('newOrder')" id="tabBtn-newOrder" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-blue-500 text-white transition-all flex items-center space-x-2 whitespace-nowrap active">
+            <i class="fa-solid fa-file-pen"></i>
+            <span>1. 新開訂單</span>
+            <span id="newOrderItemBadge" class="ml-1 bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full border border-amber-500/30">0</span>
+          </button>
+
+          <button onclick="switchTab('pendingDrafts')" id="tabBtn-pendingDrafts" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <span>2. 暫存訂單(待確認)</span>
+            <span id="pendingDraftsBadge" class="ml-1 bg-emerald-500/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full border border-emerald-500/30">0</span>
+          </button>
+
+          <button onclick="switchTab('orders')" id="tabBtn-orders" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-list-check"></i>
+            <span>3. 訂單進度</span>
+          </button>
+
+          <button onclick="switchTab('allocation')" id="tabBtn-allocation" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-truck-ramp-box"></i>
+            <span>4. 智能配貨</span>
+          </button>
+
+          <button onclick="switchTab('products')" id="tabBtn-products" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-book"></i>
+            <span>5. 書單庫主檔</span>
+          </button>
+
+          <button onclick="switchTab('logs')" id="tabBtn-logs" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition-all flex items-center space-x-2 whitespace-nowrap">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>6. 操作日誌 Logs</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+      <!-- TAB 1: 新開訂單 -->
+      <section id="tab-newOrder" class="tab-content active space-y-5">
+
+        <div class="sticky top-[108px] z-30 bg-white/95 backdrop-blur-md rounded-2xl p-3.5 shadow-md border border-slate-200/90 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <button onclick="clearOrderFormWithConfirm()" class="bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 font-medium px-4 py-2 rounded-xl transition-all flex items-center space-x-2 text-sm">
+              <i class="fa-solid fa-eraser"></i>
+              <span>清空資料</span>
+            </button>
+
+            <div id="editModeBanner" class="hidden bg-amber-50 border border-amber-300 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-2">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>正在修改暫存單：<span id="editingOrderIdLabel" class="font-mono underline"></span></span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button id="saveDraftBtn" onclick="saveDraftAction()" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-5 py-2 rounded-xl shadow-sm transition-all flex items-center space-x-2 text-sm">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>儲存訂單</span>
+            </button>
+
+            <button id="printAndSaveBtn" onclick="printAndSaveOrderAction()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-xl shadow-md shadow-blue-500/25 transition-all flex items-center space-x-2 text-sm">
+              <i class="fa-solid fa-print"></i>
+              <span>列印三聯單並儲存訂單</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 第一部分：訂單基本資料 -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-blue-600 rounded-full inline-block"></span>
+              <span>第一部分：訂單與客戶基本資料</span>
+            </h3>
+            <span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md font-mono">Order Header</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">落單日期 (YYYY-MM-DD) <span class="text-red-500">*</span></label>
+              <input type="date" id="draftOrderDate" onkeydown="handleEnterNext(event, 'draftOrderId')"
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">實體單號 (必須10位數字) <span class="text-red-500">*</span></label>
+              <input type="text" id="draftOrderId" maxlength="10" placeholder="例: 1234567890"
+                     onblur="checkOrderIdHint()" onkeydown="handleEnterNext(event, 'draftCustomerName')"
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">學生名稱 <span class="text-red-500">*</span></label>
+              <input type="text" id="draftCustomerName" placeholder="例如: 陳大文" onkeydown="handleEnterNext(event, 'draftPhone')"
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">聯絡電話 (基本8位) <span class="text-red-500">*</span></label>
+              <input type="text" id="draftPhone" placeholder="例如: 91234567" onblur="checkPhoneLengthHint()" onkeydown="handleEnterNext(event, 'selectBranch')"
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- 第二部分：門市與學籍分類 -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-indigo-600 rounded-full inline-block"></span>
+              <span>第二部分：門市與學籍分類</span>
+            </h3>
+            <span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md font-mono">Branch & School</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">負責門市 <span class="text-red-500">*</span></label>
+              <select id="selectBranch" onchange="onBranchChange()" onkeydown="handleEnterNext(event, 'selectSchool')"
+                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+                <option value="">-- 請選擇門市 --</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">學校名稱 <span class="text-red-500">*</span></label>
+              <select id="selectSchool" onchange="onSchoolChange()" onkeydown="handleEnterNext(event, 'selectGrade')"
+                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+                <option value="">-- 請先選擇門市 --</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">年級 <span class="text-red-500">*</span></label>
+              <select id="selectGrade" onchange="onGradeChange()" onkeydown="handleEnterNext(event, 'seq_input_0')"
+                      class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none">
+                <option value="">-- 請先選擇學校 --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第三部分：訂購明細 -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-3">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-emerald-500 rounded-full inline-block"></span>
+              <span>第三部分：訂購明細 (序號、書號、書名)</span>
+            </h3>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="sortGridRowsBySeq()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5">
+                <i class="fa-solid fa-arrow-up-1-9"></i>
+                <span>整理序號 (小→大)</span>
+              </button>
+
+              <div class="flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                <span class="text-xs text-slate-600 font-bold">批次折扣 (最高88折):</span>
+                <input type="number" step="0.01" id="bulkDiscountInput" placeholder="0.88" 
+                       class="w-20 px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-mono text-center outline-none">
+                <button onclick="applyBulkDiscountLimit()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white font-medium px-3 py-1 rounded-lg transition-all">
+                  套用批次
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-[450px] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-800 text-slate-200 font-semibold sticky top-0 z-10">
+                <tr>
+                  <th class="p-2.5 w-12 text-center">#</th>
+                  <th class="p-2.5 w-24 text-center">序號</th>
+                  <th class="p-2.5 w-28">書號</th>
+                  <th class="p-2.5">書名</th>
+                  <th class="p-2.5 w-28 text-center">定價 (最低80%)</th>
+                  <th class="p-2.5 w-24 text-center">折扣 (最低0.7)</th>
+                  <th class="p-2.5 w-28 text-right">折實單價 (可改)</th>
+                  <th class="p-2.5 w-20 text-center">數量</th>
+                  <th class="p-2.5 w-24 text-right">小計</th>
+                  <th class="p-2.5 w-12 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="quickGridBody" class="divide-y divide-slate-100 font-mono">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-3 flex justify-between items-center">
+            <button onclick="addNewGridRow()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1">
+              <i class="fa-solid fa-plus"></i>
+              <span>新增書籍列</span>
+            </button>
+            <span class="text-xs text-slate-400">提示：支援小數點一位數 (如 $125.5)；定價低於原定價 80% 將恢復系統預設價，折實單價不可低於定價 70%</span>
+          </div>
+
+          <div class="mt-4 flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 gap-4">
+            <div class="w-full sm:w-1/2">
+              <input type="text" id="draftRemark" placeholder="內部備忘 (例: 客人付訂$100)" 
+                     class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none">
+            </div>
+            
+            <div class="flex items-center space-x-6">
+              <div class="text-right">
+                <span class="text-xs text-slate-500 font-sans block">總項數 / 總件數 / 總金額</span>
+                <span id="draftTotalSummary" class="text-lg font-bold text-blue-600 font-mono">0 項 / 0 本 / $0.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB 2: 暫存訂單(待確認) -->
+      <section id="tab-pendingDrafts" class="tab-content space-y-5">
+
+        <div class="sticky top-[108px] z-30 bg-white/95 backdrop-blur-md rounded-2xl p-3.5 shadow-md border border-slate-200/90 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <span class="w-2 h-5 bg-emerald-500 rounded-full inline-block"></span>
+            <h3 class="font-bold text-slate-900 text-sm sm:text-base">暫存訂單 (待確認過數)</h3>
+            <button onclick="fetchDraftsFromGas()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-lg transition-all flex items-center space-x-1">
+              <i class="fa-solid fa-rotate"></i>
+              <span>重新整理</span>
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <span class="text-xs text-slate-600 hidden sm:inline">
+              已勾選 <strong id="selectedDraftsCount" class="text-blue-600 font-mono">0</strong> 張｜總折實金額 <strong id="selectedDraftsTotalPrice" class="text-emerald-600 font-mono">$0.0</strong>
+            </span>
+            <button onclick="batchCommitDraftsAction()" id="batchCommitBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-xl shadow-md shadow-blue-500/25 transition-all flex items-center space-x-2 text-sm">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>確認過數 (轉入大表)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex flex-wrap items-end justify-between gap-4">
+          <div class="flex flex-wrap items-end gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">落單日期 (起)</label>
+              <input type="date" id="filterDraftStartDate" onchange="onDraftStartDateChange()"
+                     class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">落單日期 (迄)</label>
+              <input type="date" id="filterDraftEndDate" onchange="renderPendingDraftsTable()"
+                     class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">關鍵字搜尋 (單號 / 學生 / 電話 / 學校)</label>
+              <input type="text" id="filterDraftKeyword" oninput="renderPendingDraftsTable()" placeholder="輸入關鍵字..."
+                     class="w-56 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button onclick="clearDraftFilters()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl transition-all">
+              清除篩選
+            </button>
+          </div>
+          <div class="text-xs text-slate-400">
+            <i class="fa-solid fa-arrow-up-1-9 mr-1"></i>已自動依實體單號由小到大排序｜點擊單號可修改訂單
+          </div>
+        </div>
+
+	  <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
+		    <tr>
+                    <th class="p-3 w-10 text-center">
+                      <input type="checkbox" id="selectAllDraftsCheckbox" onchange="toggleSelectAllVisibleDrafts()" class="w-4 h-4 rounded accent-blue-500 cursor-pointer">
+                    </th>
+                  <th class="p-3">落單日期</th>
+                  <th class="p-3 font-mono">實體單號</th>
+                  <th class="p-3">學生名稱</th>
+                  <th class="p-3 font-mono">聯絡電話</th>
+                  <th class="p-3">負責門市</th>
+                  <th class="p-3">學校名稱</th>
+                  <th class="p-3">年級</th>
+                  <th class="p-3 text-right">總訂數</th>
+                  <th class="p-3 text-right">總折實價</th>
+                  <th class="p-3 text-center w-16">刪除</th>
+                </tr>
+              </thead>
+              <tbody id="pendingDraftsTableBody" class="divide-y divide-slate-100">
+                <tr><td colspan="11" class="p-8 text-center text-slate-400">載入中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB 3: 訂單進度 -->
+      <section id="tab-orders" class="tab-content space-y-5">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-indigo-600 rounded-full inline-block"></span>
+              <span>訂單生命週期追蹤</span>
+            </h3>
+            <button onclick="fetchOrdersFromGas()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1 self-start">
+              <i class="fa-solid fa-rotate"></i>
+              <span>重新整理</span>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-wrap items-end gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">落單日期 (起)</label>
+                <input type="date" id="filterOrderStartDate" onchange="onOrderStartDateChange()"
+                       class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">落單日期 (迄)</label>
+                <input type="date" id="filterOrderEndDate" onchange="renderOrdersTable()"
+                       class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">關鍵字搜尋 (單號 / 學生 / 電話 / 學校 / 書號 / 書名)</label>
+                <input type="text" id="filterOrderKeyword" oninput="renderOrdersTable()" placeholder="輸入關鍵字..."
+                       class="w-64 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <button onclick="clearOrderFilters()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl transition-all">
+                清除篩選
+              </button>
+            </div>
+            <div class="text-xs text-slate-500">
+              共 <span id="filteredOrdersCount" class="font-mono font-bold text-indigo-600">0</span> 筆明細
+            </div>
+          </div>
+        </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
+              <table class="w-full text-left border-collapse text-xs">
+		<thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
+                  <tr>
+                    <th class="p-3 font-mono">訂單號</th>
+                  <th class="p-3">落單日</th>
+                  <th class="p-3">客人 / 電話</th>
+                  <th class="p-3">學校 / 年級</th>
+                  <th class="p-3 text-center">序號</th>
+                  <th class="p-3">書號 / 書名</th>
+                  <th class="p-3 text-center">數量</th>
+                  <th class="p-3 text-right">金額</th>
+                  <th class="p-3">內部狀態 / 更新日期</th>
+                  <th class="p-3">對外公開狀態 / 更新日期</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody" class="divide-y divide-slate-100 font-mono"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: 智能配貨中心 -->
+      <section id="tab-allocation" class="tab-content space-y-5">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="switchAllocSubTab('shortage')" id="allocBtn-shortage" class="alloc-btn px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white shadow-sm transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-cart-flatbed"></i>
+              <span>1. 欠書匯總與訂貨</span>
+              <span id="shortageBadge" class="bg-white/20 px-1.5 py-0.5 rounded-full font-mono">0</span>
+            </button>
+            <button onclick="switchAllocSubTab('arrival')" id="allocBtn-arrival" class="alloc-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-barcode"></i>
+              <span>2. 到貨點貨配貨</span>
+            </button>
+            <button onclick="switchAllocSubTab('pickup')" id="allocBtn-pickup" class="alloc-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-hand-holding-heart"></i>
+              <span>3. 門市取貨核對</span>
+            </button>
+          </div>
+          <button onclick="refreshAllocationData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1">
+            <i class="fa-solid fa-rotate"></i>
+            <span>同步最新訂單</span>
+          </button>
+        </div>
+
+        <!-- 子分頁 1: 欠書匯總與訂貨 -->
+        <div id="allocSub-shortage" class="alloc-subtab active space-y-4">
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-wrap items-end gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">供應商篩選 (Products L 欄)</label>
+                <select id="filterShortageSupplier" onchange="renderShortageTable()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                  <option value="">-- 全部供應商 --</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">關鍵字搜尋 (書號 / 書名)</label>
+                <input type="text" id="filterShortageKeyword" oninput="renderShortageTable()" placeholder="輸入書號或書名..."
+                       class="w-48 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">訂貨日期</label>
+                <input type="date" id="purchaseOrderDateInput" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono outline-none">
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="exportShortageCsv()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-2 rounded-xl transition-all flex items-center space-x-1.5">
+                <i class="fa-solid fa-file-csv"></i>
+                <span>匯出訂貨單 (CSV)</span>
+              </button>
+              <button onclick="confirmPurchaseOrderAction()" id="confirmPurchaseBtn" class="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl shadow-sm transition-all flex items-center space-x-1.5">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>確認已訂貨 (轉為在訂中)</span>
+              </button>
+            </div>
+          </div>
+
+	  <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="overflow-x-auto max-h-[58vh] overflow-y-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-slate-900 text-slate-200 font-medium sticky top-0 z-10">
+                  <tr>
+                    <th class="p-3 w-10 text-center">
+                      <input type="checkbox" id="selectAllShortageCheckbox" onchange="toggleSelectAllShortage()" class="w-4 h-4 rounded accent-teal-500 cursor-pointer">
+                    </th>
+                    <th class="p-3">供應商</th>
+                    <th class="p-3 font-mono">書號 / ISBN</th>
+                    <th class="p-3">書名</th>
+                    <th class="p-3 text-center">涉及訂單數</th>
+                    <th class="p-3 text-right">新訂單總欠數</th>
+                  </tr>
+                </thead>
+                <tbody id="shortageTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子分頁 2: 到貨點貨配貨 -->
+        <div id="allocSub-arrival" class="alloc-subtab space-y-4">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">掃描 / 輸入到貨書號與數量</h4>
+                <p class="text-xs text-slate-500">輸入 13 位 ISBN 會自動擷取第 4–12 碼進行比對。確認到貨後僅更新內部狀態為【已到貨】，對外狀態於第二天自動公開（亦可手動即時發布）。</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <button onclick="manualSyncPublicArrivedAction(false)" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5">
+                  <i class="fa-solid fa-bullhorn"></i>
+                  <span>發布昨日(及之前)已到貨</span>
+                </button>
+                <button onclick="manualSyncPublicArrivedAction(true)" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 font-bold px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5">
+                  <i class="fa-solid fa-bolt"></i>
+                  <span>即時發布今日已到貨</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">書號 / ISBN</label>
+                <input type="text" id="arrivalBookNoInput" onkeydown="if(event.key==='Enter'){event.preventDefault(); searchArrivalOrders();}" placeholder="輸入或掃描書號..."
+                       class="w-56 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm outline-none focus:ring-2 focus:ring-teal-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">實收數量</label>
+                <input type="number" min="1" id="arrivalQtyInput" value="1" oninput="autoSelectArrivalRows()"
+                       class="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm text-center outline-none focus:ring-2 focus:ring-teal-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">到貨日期</label>
+                <input type="date" id="arrivalDateInput" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs outline-none">
+              </div>
+              <button onclick="searchArrivalOrders()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center space-x-1.5">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>查詢待配訂單</span>
+              </button>
+              <button onclick="confirmArrivalAction()" id="confirmArrivalBtn" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center space-x-1.5 ml-auto">
+                <i class="fa-solid fa-box-open"></i>
+                <span>確認到貨 (內部改為已到貨)</span>
+              </button>
+            </div>
+            <div id="arrivalSummaryHint" class="text-xs text-slate-600 font-medium"></div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-slate-900 text-slate-200 font-medium">
+                  <tr>
+                    <th class="p-3 w-10 text-center">選取</th>
+                    <th class="p-3 font-mono">訂單號</th>
+                    <th class="p-3">落單日</th>
+                    <th class="p-3">客人 / 電話</th>
+                    <th class="p-3">學校 / 年級</th>
+                    <th class="p-3">書名</th>
+                    <th class="p-3 text-center">訂購數量</th>
+                    <th class="p-3">目前狀態</th>
+                  </tr>
+                </thead>
+                <tbody id="arrivalOrdersTableBody" class="divide-y divide-slate-100">
+                  <tr><td colspan="8" class="p-8 text-center text-slate-400">請輸入書號並點擊「查詢待配訂單」</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子分頁 3: 門市取貨核對 -->
+        <div id="allocSub-pickup" class="alloc-subtab space-y-4">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+              <div class="flex flex-wrap items-end gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">搜尋訂單 (實體單號 / 電話 / 客人姓名)</label>
+                  <input type="text" id="pickupSearchInput" onkeydown="if(event.key==='Enter'){event.preventDefault(); searchPickupOrders();}" placeholder="輸入單號或電話..."
+                         class="w-64 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="searchPickupOrders()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center space-x-1.5">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <span>搜尋訂單</span>
+                </button>
+                <button onclick="selectAllArrivedForPickup()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">
+                  全選已到貨
+                </button>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="text-right">
+                  <span class="text-[11px] text-slate-500 block">本次核對取貨總計</span>
+                  <span id="pickupSelectedSummary" class="text-base font-bold text-blue-600 font-mono">0 本 / $0.0</span>
+                </div>
+                <button onclick="confirmPickupAction()" id="confirmPickupBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center space-x-1.5">
+                  <i class="fa-solid fa-check-double"></i>
+                  <span>確認已取貨</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-slate-900 text-slate-200 font-medium">
+                  <tr>
+                    <th class="p-3 w-12 text-center">取貨</th>
+                    <th class="p-3 font-mono">訂單號</th>
+                    <th class="p-3">客人 / 電話</th>
+                    <th class="p-3 text-center">序號</th>
+                    <th class="p-3">書號 / 書名</th>
+                    <th class="p-3 text-center">數量</th>
+                    <th class="p-3 text-right">折實價</th>
+                    <th class="p-3">內部狀態</th>
+                    <th class="p-3">對外狀態</th>
+                  </tr>
+                </thead>
+                <tbody id="pickupOrdersTableBody" class="divide-y divide-slate-100">
+                  <tr><td colspan="9" class="p-8 text-center text-slate-400">請輸入單號或電話搜尋客人訂單</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: 書單庫主檔 -->
+      <section id="tab-products" class="tab-content space-y-6">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+	    <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-purple-600 rounded-full inline-block"></span>
+              <span>書單庫 Master (學校書單與預設折扣)</span>
+            </h3>
+            <span class="text-xs text-slate-500">共 <span id="productCount" class="font-mono font-bold text-purple-600">0</span> 項書籍資料</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">負責門市</label>
+              <select id="prodFilterBranch" onchange="onProdBranchChange()" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="">-- 全部門市 --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">學校名稱</label>
+              <select id="prodFilterSchool" onchange="onProdSchoolChange()" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="">-- 全部學校 --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">年級</label>
+              <select id="prodFilterGrade" onchange="filterProductsTable()" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="">-- 全部年級 --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">關鍵字 (書號 / 書名 / 供應商)</label>
+              <input type="text" id="prodFilterKeyword" oninput="filterProductsTable()" placeholder="輸入關鍵字..." class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            <div class="flex items-end">
+              <button onclick="clearProductFilters()" class="w-full text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition-all">清除篩選</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-[60vh] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0 z-10">
+                <tr>
+                  <th class="p-3">分店</th>
+                  <th class="p-3">學校名稱</th>
+                  <th class="p-3">年級</th>
+                  <th class="p-3">序號</th>
+                  <th class="p-3">書號</th>
+                  <th class="p-3">書單名稱 / 產品名稱</th>
+                  <th class="p-3">定價</th>
+                  <th class="p-3">預設折實價</th>
+                  <th class="p-3">供應商</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody" class="divide-y divide-slate-100 font-mono"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: 操作日誌 Logs -->
+      <section id="tab-logs" class="tab-content space-y-6">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+              <span class="w-2 h-5 bg-slate-700 rounded-full inline-block"></span>
+              <span>系統操作審計日誌 (Audit Log)</span>
+            </h3>
+            <button onclick="fetchLogsFromGas()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1">
+              <i class="fa-solid fa-rotate"></i>
+              <span>重新整理</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">時間</th>
+                  <th class="p-3">執行者</th>
+                  <th class="p-3">操作類型</th>
+                  <th class="p-3">目標單號</th>
+                  <th class="p-3">詳細說明</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-400">
+      學校訂書 ERP 系統 &copy; 2026 Internal Administration Console
+    </footer>
+  </div>
+
+  <!-- ⏳ Loading 遮罩 -->
+  <div id="printLoadingOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center space-y-3 border border-slate-100">
+      <i class="fa-solid fa-spinner animate-spin text-3xl text-blue-600"></i>
+      <p id="printLoadingText" class="text-sm font-bold text-slate-800">正在處理中，請稍候...</p>
+      <p class="text-xs text-slate-400">請勿重複點擊或關閉視窗</p>
+    </div>
+  </div>
+
+  <!-- 🖨️ 專用三聯紙套印隱藏容器 -->
+  <div id="printableReceipt" class="hidden"></div>
+
+  <!-- Toast 提示 -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[70] flex flex-col space-y-2 pointer-events-none"></div>
+
+<script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
+
+    const PRINT_LAYOUT_MM = {
+      rowStep: 6.95,
+      page1StartTop: 28.54,
+      page2StartTop: 57.58,
+      colSeq: { left: 2, width: 11 },
+      colBook: { left: 14, width: 78 },
+      colQty: { left: 115, width: 13 },
+      colPrice: { left: 129, width: 15 },
+      colDiscPrice: { left: 145, width: 16 },
+      monthTop: 44.0,
+      monthLeft: 172,
+      dayTop: 44.0,
+      dayLeft: 184,
+      nextPageTop: 162.0,
+      nextPageLeft: 162,
+      totalQtyTop: 168.5,
+      totalQtyLeft: 18,
+      totalPriceTop: 168.5,
+      totalPriceLeft: 62,
+      schoolTop: 181.5,
+      schoolLeft: 18,
+      gradeTop: 188.0,
+      gradeLeft: 52
+    };
+
+    const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    let adminToken = "";
+    let mockProducts = [];
+    let gridRowsData = [];
+    let pendingDrafts = [];
+    let selectedDraftIds = new Set();
+    let editingOriginalOrderId = null;
+    let ordersList = [];
+    let logsList = [];
+
+    let selectedShortageBookNos = new Set();
+    let currentArrivalMatches = [];
+    let selectedArrivalRowIndices = new Set();
+    let currentPickupMatches = [];
+    let selectedPickupRowIndices = new Set();
+
+    function getTodayLocal() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseAnyDate(val) {
+      if (!val) return null;
+      const str = String(val).trim();
+      const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (isoMatch) {
+        return new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+      }
+      const d = new Date(str);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function extractIsoDate(val) {
+      const d = parseAnyDate(val);
+      if (!d) return '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatMonthDay(val) {
+      const d = parseAnyDate(val);
+      if (!d) return String(val || '-');
+      return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
+    }
+
+    function showPrintLoading(text) {
+      document.getElementById('printLoadingText').innerText = text || "正在處理中，請稍候...";
+      document.getElementById('printLoadingOverlay').classList.remove('hidden');
+    }
+
+    function hidePrintLoading() {
+      document.getElementById('printLoadingOverlay').classList.add('hidden');
+    }
+
+    function focusDraftOrderId() {
+      setTimeout(() => {
+        const orderIdInput = document.getElementById('draftOrderId');
+        if (orderIdInput) {
+          orderIdInput.focus();
+          orderIdInput.select();
+        }
+      }, 60);
+    }
+
+    window.onload = function() {
+      const today = getTodayLocal();
+      document.getElementById('draftOrderDate').value = today;
+      document.getElementById('purchaseOrderDateInput').value = today;
+      document.getElementById('arrivalDateInput').value = today;
+
+      initDynamicGridRows(5);
+      renderProductsTable(mockProducts);
+      populateBranchDropdown();
+
+      const pinInput = document.getElementById('loginPin');
+      if (pinInput) {
+        pinInput.focus();
+      }
+    };
+
+    function togglePasswordVisibility() {
+      const pinInput = document.getElementById('loginPin');
+      const eyeIcon = document.getElementById('eyeIcon');
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        eyeIcon.className = 'fa-solid fa-eye-slash';
+      } else {
+        pinInput.type = 'password';
+        eyeIcon.className = 'fa-solid fa-eye';
+      }
+    }
+
+    function handleEnterNext(e, nextId) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const nextElem = document.getElementById(nextId);
+        if (nextElem) nextElem.focus();
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const pin = document.getElementById('loginPin').value.trim();
+      const btn = document.getElementById('loginBtn');
+      
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>驗證中...</span>`;
+      document.getElementById('loginError').classList.add('hidden');
+
+      fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "loginPin", pin: pin })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success" && data.token) {
+          loginSuccess(data.token);
+        } else {
+          loginFail();
+        }
+      })
+      .catch(() => loginFail())
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<span>安全登入</span><i class="fa-solid fa-arrow-right text-sm"></i>`;
+      });
+    }
+
+    function loginSuccess(token) {
+      adminToken = token;
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('appUI').classList.remove('hidden');
+      showToast("登入成功！正在同步 Google 試算表資料...", "success");
+      fetchAllDataFromGas();
+      focusDraftOrderId();
+    }
+
+    function loginFail() {
+      document.getElementById('loginError').classList.remove('hidden');
+    }
+
+    function handleLogout() {
+      adminToken = "";
+      document.getElementById('appUI').classList.add('hidden');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('loginPin').value = '';
+      const pinInput = document.getElementById('loginPin');
+      if (pinInput) {
+        pinInput.focus();
+      }
+    }
+
+    function fetchAllDataFromGas() {
+      sendGasApi({ action: "getProducts", schoolName: "" }, (data) => {
+        if (data.data) {
+          mockProducts = data.data;
+          renderProductsTable(mockProducts);
+          populateBranchDropdown();
+          populateSupplierDropdown();
+        }
+      });
+
+      fetchDraftsFromGas();
+    }
+
+    function fetchDraftsFromGas() {
+      sendGasApi({ action: "getDrafts" }, (data) => {
+        pendingDrafts = data.data || [];
+        const validIds = new Set(pendingDrafts.map(d => d.orderId));
+        selectedDraftIds.forEach(id => {
+          if (!validIds.has(id)) selectedDraftIds.delete(id);
+        });
+        document.getElementById('pendingDraftsBadge').innerText = pendingDrafts.length;
+        renderPendingDraftsTable();
+      });
+    }
+
+    function fetchOrdersFromGas(cb) {
+      sendGasApi({ action: "getOrders" }, (data) => {
+        ordersList = data.data || [];
+        renderOrdersTable();
+        renderShortageTable();
+        if (cb) cb();
+      });
+    }
+
+    function fetchLogsFromGas() {
+      sendGasApi({ action: "getLogs" }, (data) => {
+        logsList = data.data || [];
+        renderLogsTable();
+      });
+    }
+
+    // =========================================================================
+    // TAB 1: 新開訂單邏輯 & TAB 5 書單庫篩選連動
+    // =========================================================================
+    function checkOrderIdHint() {
+      const orderId = document.getElementById('draftOrderId').value.trim();
+      if (orderId && !/^\d{10}$/.test(orderId)) {
+        showToast(`⚠️ 實體單號必須為 10 位數字 (目前 ${orderId.length} 位)！`, "error");
+      }
+    }
+
+    function checkPhoneLengthHint() {
+      const phone = document.getElementById('draftPhone').value.replace(/[\s-]/g, '');
+      if (!phone) return;
+      if (phone.length < 8) {
+        showToast("⚠️ 聯絡電話不可少於 8 位！", "error");
+      } else if (phone.length > 8) {
+        showToast("提示：聯絡電話超過 8 位，請確認號碼是否正確。", "warning");
+      }
+    }
+
+    function populateBranchDropdown() {
+      const branches = [...new Set(mockProducts.map(p => String(p.branch).trim()))].filter(Boolean);
+      const branchSelect = document.getElementById('selectBranch');
+      const currentVal = branchSelect.value;
+      let html = '<option value="">-- 請選擇門市 --</option>';
+      branches.forEach(b => { html += `<option value="${b}">${b}</option>`; });
+      branchSelect.innerHTML = html;
+      if (currentVal) branchSelect.value = currentVal;
+
+      const prodBranch = document.getElementById('prodFilterBranch');
+      if (prodBranch) {
+        const curProdBranch = prodBranch.value;
+        prodBranch.innerHTML = '<option value="">-- 全部門市 --</option>' + branches.map(b => `<option value="${b}">${b}</option>`).join('');
+        if (curProdBranch) prodBranch.value = curProdBranch;
+        onProdBranchChange();
+      }
+    }
+
+    function onProdBranchChange() {
+      const branchEl = document.getElementById('prodFilterBranch');
+      const schoolSelect = document.getElementById('prodFilterSchool');
+      const gradeSelect = document.getElementById('prodFilterGrade');
+      if (!branchEl || !schoolSelect || !gradeSelect) return;
+
+      const branch = branchEl.value.trim();
+      gradeSelect.innerHTML = '<option value="">-- 全部年級 --</option>';
+      const schools = [...new Set(mockProducts
+        .filter(p => !branch || String(p.branch).trim() === branch)
+        .map(p => String(p.school).trim()))].filter(Boolean);
+      schoolSelect.innerHTML = '<option value="">-- 全部學校 --</option>' + schools.map(s => `<option value="${s}">${s}</option>`).join('');
+      filterProductsTable();
+    }
+
+    function onProdSchoolChange() {
+      const branch = document.getElementById('prodFilterBranch').value.trim();
+      const school = document.getElementById('prodFilterSchool').value.trim();
+      const gradeSelect = document.getElementById('prodFilterGrade');
+      const grades = [...new Set(mockProducts
+        .filter(p => (!branch || String(p.branch).trim() === branch) && (!school || String(p.school).trim() === school))
+        .map(p => String(p.grade).trim()))].filter(Boolean);
+      gradeSelect.innerHTML = '<option value="">-- 全部年級 --</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
+      filterProductsTable();
+    }
+
+    function filterProductsTable() {
+      const branchEl = document.getElementById('prodFilterBranch');
+      const schoolEl = document.getElementById('prodFilterSchool');
+      const gradeEl = document.getElementById('prodFilterGrade');
+      const kwEl = document.getElementById('prodFilterKeyword');
+      if (!branchEl) return;
+
+      const branch = branchEl.value.trim();
+      const school = schoolEl ? schoolEl.value.trim() : '';
+      const grade = gradeEl ? gradeEl.value.trim() : '';
+      const kw = kwEl ? kwEl.value.trim().toLowerCase() : '';
+
+      const filtered = mockProducts.filter(p => {
+        if (branch && String(p.branch).trim() !== branch) return false;
+        if (school && String(p.school).trim() !== school) return false;
+        if (grade && String(p.grade).trim() !== grade) return false;
+        if (kw && !`${p.bookNo} ${p.bookName} ${p.supplier} ${p.school}`.toLowerCase().includes(kw)) return false;
+        return true;
+      });
+      renderProductsTable(filtered);
+    }
+
+    function clearProductFilters() {
+      const branchEl = document.getElementById('prodFilterBranch');
+      const kwEl = document.getElementById('prodFilterKeyword');
+      if (branchEl) branchEl.value = '';
+      if (kwEl) kwEl.value = '';
+      onProdBranchChange();
+    }
+
+    function onBranchChange() {
+      const branch = document.getElementById('selectBranch').value.trim();
+      const schoolSelect = document.getElementById('selectSchool');
+      const gradeSelect = document.getElementById('selectGrade');
+      gradeSelect.innerHTML = '<option value="">-- 請先選擇學校 --</option>';
+
+      if (!branch) {
+        schoolSelect.innerHTML = '<option value="">-- 請先選擇門市 --</option>';
+        return;
+      }
+      const schools = [...new Set(mockProducts.filter(p => String(p.branch).trim() === branch).map(p => String(p.school).trim()))].filter(Boolean);
+      schoolSelect.innerHTML = '<option value="">-- 請選擇學校 --</option>' + schools.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function onSchoolChange() {
+      const branch = document.getElementById('selectBranch').value.trim();
+      const school = document.getElementById('selectSchool').value.trim();
+      const gradeSelect = document.getElementById('selectGrade');
+
+      if (!school) {
+        gradeSelect.innerHTML = '<option value="">-- 請先選擇學校 --</option>';
+        return;
+      }
+      const grades = [...new Set(mockProducts.filter(p => String(p.branch).trim() === branch && String(p.school).trim() === school).map(p => String(p.grade).trim()))].filter(Boolean);
+      gradeSelect.innerHTML = '<option value="">-- 請選擇年級 --</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
+    }
+
+    function onGradeChange() {
+      const grade = document.getElementById('selectGrade').value.trim();
+      initDynamicGridRows(5);
+      if (grade) {
+        showToast("已鎖定年級，請輸入序號！", "info");
+        setTimeout(() => {
+          const firstSeq = document.getElementById('seq_input_0');
+          if (firstSeq) {
+            firstSeq.focus();
+            firstSeq.select();
+          }
+        }, 50);
+      }
+    }
+
+    function initDynamicGridRows(count = 5) {
+      gridRowsData = new Array(count).fill(null);
+      renderGridBody();
+    }
+
+    function addNewGridRow() {
+      gridRowsData.push(null);
+      renderGridBody();
+    }
+
+    function removeGridRow(index) {
+      gridRowsData.splice(index, 1);
+      if (gridRowsData.length === 0) gridRowsData.push(null);
+      renderGridBody();
+      updateTotalSummary();
+    }
+
+    function sortGridRowsBySeq() {
+      const totalRows = Math.max(gridRowsData.length, 5);
+      const validItems = gridRowsData
+        .filter(d => d && typeof d === 'object' && d.seqNo)
+        .sort((a, b) => parseInt(a.seqNo, 10) - parseInt(b.seqNo, 10));
+
+      const newGrid = [...validItems];
+      while (newGrid.length < totalRows) {
+        newGrid.push(null);
+      }
+      gridRowsData = newGrid;
+      renderGridBody();
+      showToast("已依序號由小到大重新整理！", "success");
+    }
+
+    function renderGridBody() {
+      const tbody = document.getElementById('quickGridBody');
+      let html = "";
+
+      gridRowsData.forEach((data, i) => {
+        const seqVal = data && data.seqNo !== undefined ? data.seqNo : "";
+        const bookNo = data ? data.bookNo : "-";
+        const bookName = data ? data.bookName : (data === false ? "⚠️ 序號無效或重複" : "-");
+        const price = data ? data.price : "";
+        const disc = data ? data.discount : "";
+        const discPriceVal = data ? data.discountPrice.toFixed(1) : "";
+        const qty = data ? data.qty : 1;
+        const total = data ? data.totalPrice.toFixed(1) : "0.0";
+        const disabled = !data;
+
+        html += `
+          <tr id="gridRow_${i}" class="hover:bg-slate-50 border-b border-slate-100">
+            <td class="p-2 text-center text-slate-400 text-[11px] font-sans">${i + 1}</td>
+            <td class="p-2">
+              <input type="number" min="1" id="seq_input_${i}" value="${seqVal}" oninput="onSeqInputChange(${i})" onkeydown="handleSeqKeyDown(event, ${i})" placeholder="序號" 
+                     class="w-full px-2 py-1 bg-white border border-slate-200 rounded text-center font-bold text-blue-600 outline-none">
+            </td>
+            <td class="p-2 font-mono text-slate-500" id="bookNo_${i}">${bookNo}</td>
+            <td class="p-2 font-sans ${data === false ? 'text-red-500 font-bold' : 'text-slate-700'}" id="bookName_${i}">${bookName}</td>
+            <td class="p-2 text-center">
+              <input type="number" step="0.1" id="priceInput_${i}" value="${price}" onchange="onPriceInputChange(${i})" placeholder="$定價" ${disabled ? 'disabled' : ''}
+                     class="w-24 px-1.5 py-1 ${disabled ? 'bg-slate-100' : 'bg-white'} border border-slate-200 rounded text-center font-mono outline-none text-slate-700 font-bold">
+            </td>
+            <td class="p-2 text-center">
+              <input type="number" step="0.01" id="discount_${i}" value="${disc}" onchange="onDiscountChange(${i})" placeholder="0.88" ${disabled ? 'disabled' : ''}
+                     class="w-16 px-1.5 py-0.5 ${disabled ? 'bg-slate-100' : 'bg-white'} border border-slate-200 rounded text-center font-mono outline-none">
+            </td>
+            <td class="p-2 text-right">
+              <input type="number" step="0.1" id="discPrice_${i}" value="${discPriceVal}" onchange="onDiscPriceInputChange(${i})" placeholder="0.0" ${disabled ? 'disabled' : ''}
+                     class="w-20 px-1.5 py-0.5 ${disabled ? 'bg-slate-100' : 'bg-white'} border border-slate-200 rounded text-right font-mono font-bold text-blue-600 outline-none">
+            </td>
+            <td class="p-2 text-center">
+              <input type="number" min="1" id="qty_${i}" value="${qty}" onchange="onQtyChange(${i})" ${disabled ? 'disabled' : ''}
+                     class="w-12 px-1.5 py-0.5 ${disabled ? 'bg-slate-100' : 'bg-white'} border border-slate-200 rounded text-center font-mono outline-none">
+            </td>
+            <td class="p-2 text-right font-bold text-slate-900" id="total_${i}">$${total}</td>
+            <td class="p-2 text-center">
+              <button onclick="removeGridRow(${i})" class="text-slate-400 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      updateTotalSummary();
+    }
+
+    function resetRowToInvalid(index, msgText) {
+      const bookNoElem = document.getElementById(`bookNo_${index}`);
+      const bookNameElem = document.getElementById(`bookName_${index}`);
+      const priceElem = document.getElementById(`priceInput_${index}`);
+      const discElem = document.getElementById(`discount_${index}`);
+      const discPriceElem = document.getElementById(`discPrice_${index}`);
+      const qtyElem = document.getElementById(`qty_${index}`);
+      const totalElem = document.getElementById(`total_${index}`);
+
+      bookNoElem.innerText = "-";
+      bookNameElem.innerText = msgText;
+      bookNameElem.className = msgText === "-" ? "p-2 font-sans text-slate-700" : "p-2 font-sans text-red-500 font-bold";
+
+      priceElem.value = ""; priceElem.disabled = true; priceElem.classList.add('bg-slate-100'); priceElem.classList.remove('bg-white');
+      discElem.value = ""; discElem.disabled = true; discElem.classList.add('bg-slate-100'); discElem.classList.remove('bg-white');
+      discPriceElem.value = ""; discPriceElem.disabled = true; discPriceElem.classList.add('bg-slate-100'); discPriceElem.classList.remove('bg-white');
+      qtyElem.value = 1; qtyElem.disabled = true; qtyElem.classList.add('bg-slate-100'); qtyElem.classList.remove('bg-white');
+      totalElem.innerText = "$0.0";
+    }
+
+    function onSeqInputChange(index) {
+      const branch = document.getElementById('selectBranch').value.trim();
+      const school = document.getElementById('selectSchool').value.trim();
+      const grade = document.getElementById('selectGrade').value.trim();
+      const seqInput = document.getElementById(`seq_input_${index}`);
+      if (!seqInput) return;
+      
+      const seqValStr = seqInput.value.trim();
+      const bookNoElem = document.getElementById(`bookNo_${index}`);
+      const bookNameElem = document.getElementById(`bookName_${index}`);
+      const priceElem = document.getElementById(`priceInput_${index}`);
+      const discElem = document.getElementById(`discount_${index}`);
+      const discPriceElem = document.getElementById(`discPrice_${index}`);
+      const qtyElem = document.getElementById(`qty_${index}`);
+      const totalElem = document.getElementById(`total_${index}`);
+
+      if (!branch || !school || !grade) {
+        showToast("請先完整選擇【門市、學校、年級】！", "warning");
+        seqInput.value = "";
+        return;
+      }
+
+      if (seqValStr === "") {
+        resetRowToInvalid(index, "-");
+        gridRowsData[index] = null;
+        updateTotalSummary();
+        return;
+      }
+
+      const seqVal = parseInt(seqValStr, 10);
+      if (isNaN(seqVal) || seqVal <= 0) {
+        showToast("序號必須為大於 0 的正整數！", "warning");
+        resetRowToInvalid(index, "⚠️ 序號無效");
+        gridRowsData[index] = false;
+        updateTotalSummary();
+        return;
+      }
+
+      const isDuplicate = gridRowsData.some((d, idx) => idx !== index && d && typeof d === 'object' && parseInt(d.seqNo, 10) === seqVal);
+      if (isDuplicate) {
+        showToast(`⚠️ 序號 [${seqVal}] 已存在於上方明細中，請勿重複輸入！`, "error");
+        resetRowToInvalid(index, "⚠️ 序號重複");
+        gridRowsData[index] = false;
+        updateTotalSummary();
+        return;
+      }
+
+      const found = mockProducts.find(p => 
+        String(p.branch).trim() === branch && 
+        String(p.school).trim() === school && 
+        String(p.grade).trim() === grade && 
+        parseInt(p.seqNo, 10) === seqVal
+      );
+
+      if (found) {
+        const priceVal = parseFloat(found.price) || 0;
+        const defaultPriceVal = parseFloat(found.defaultPrice) || priceVal;
+        const defaultRatio = priceVal > 0 ? parseFloat((defaultPriceVal / priceVal).toFixed(2)) : 0.88;
+        const discPriceVal = parseFloat((priceVal * defaultRatio).toFixed(1));
+
+        gridRowsData[index] = {
+          seqNo: found.seqNo,
+          bookNo: found.bookNo || "",
+          bookName: found.bookName || "",
+          originalPrice: priceVal,
+          defaultPrice: defaultPriceVal,
+          price: priceVal,
+          discount: defaultRatio,
+          discountPrice: discPriceVal,
+          qty: 1,
+          totalPrice: discPriceVal
+        };
+
+        bookNoElem.innerText = found.bookNo || "-";
+        bookNameElem.innerText = found.bookName || "-";
+        bookNameElem.className = "p-2 font-sans text-slate-700";
+
+        priceElem.disabled = false; priceElem.classList.remove('bg-slate-100'); priceElem.classList.add('bg-white'); priceElem.value = priceVal;
+        discElem.disabled = false; discElem.classList.remove('bg-slate-100'); discElem.classList.add('bg-white'); discElem.value = defaultRatio;
+        discPriceElem.disabled = false; discPriceElem.classList.remove('bg-slate-100'); discPriceElem.classList.add('bg-white'); discPriceElem.value = discPriceVal.toFixed(1);
+        qtyElem.disabled = false; qtyElem.classList.remove('bg-slate-100'); qtyElem.classList.add('bg-white'); qtyElem.value = 1;
+        totalElem.innerText = `$${gridRowsData[index].totalPrice.toFixed(1)}`;
+      } else {
+        showToast(`⚠️ 找不到序號 [${seqVal}] 的書籍，請重新確認！`, "error");
+        resetRowToInvalid(index, "⚠️ 找不到序號");
+        gridRowsData[index] = false;
+      }
+      updateTotalSummary();
+    }
+
+    function handleSeqKeyDown(e, index) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onSeqInputChange(index);
+
+        if (!gridRowsData[index] || typeof gridRowsData[index] !== 'object') {
+          const currInput = document.getElementById(`seq_input_${index}`);
+          if (currInput) {
+            currInput.focus();
+            currInput.select();
+          }
+          return;
+        }
+
+        if (index === gridRowsData.length - 1) {
+          addNewGridRow();
+        }
+        setTimeout(() => {
+          const nextInput = document.getElementById(`seq_input_${index + 1}`);
+          if (nextInput) {
+            nextInput.focus();
+            nextInput.select();
+          }
+        }, 50);
+      }
+    }
+
+    function onPriceInputChange(index) {
+      const data = gridRowsData[index];
+      if (!data) return;
+
+      const priceElem = document.getElementById(`priceInput_${index}`);
+      let newPrice = parseFloat(priceElem.value);
+      const minAllowedPrice = parseFloat((data.originalPrice * 0.8).toFixed(1));
+
+      if (isNaN(newPrice)) {
+        showToast("定價格式不正確！已自動恢復系統預設價。", "warning");
+        newPrice = data.originalPrice;
+        priceElem.value = newPrice;
+      } else if (newPrice < minAllowedPrice) {
+        showToast(`⚠️ 定價不可低於原定價 80% ($${minAllowedPrice.toFixed(1)})，已恢復系統預設價 ($${data.originalPrice.toFixed(1)})！`, "error");
+        newPrice = data.originalPrice;
+        priceElem.value = newPrice;
+      }
+
+      data.price = newPrice;
+      data.discountPrice = parseFloat((newPrice * data.discount).toFixed(1));
+      data.totalPrice = parseFloat((data.discountPrice * data.qty).toFixed(1));
+
+      document.getElementById(`discPrice_${index}`).value = data.discountPrice.toFixed(1);
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
+      updateTotalSummary();
+    }
+
+    function onDiscountChange(index) {
+      const data = gridRowsData[index];
+      if (!data) return;
+
+      let disc = parseFloat(document.getElementById(`discount_${index}`).value);
+      if (isNaN(disc) || disc < 0.70) {
+        showToast("最低折扣只可到 7 折 (0.70)！", "error");
+        disc = 0.70;
+        document.getElementById(`discount_${index}`).value = 0.70;
+      }
+
+      data.discount = disc;
+      data.discountPrice = parseFloat((data.price * disc).toFixed(1));
+      data.totalPrice = parseFloat((data.discountPrice * data.qty).toFixed(1));
+
+      document.getElementById(`discPrice_${index}`).value = data.discountPrice.toFixed(1);
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
+      updateTotalSummary();
+    }
+
+    function onDiscPriceInputChange(index) {
+      const data = gridRowsData[index];
+      if (!data) return;
+
+      const discPriceElem = document.getElementById(`discPrice_${index}`);
+      let newDiscPrice = parseFloat(discPriceElem.value);
+      const minAllowedDiscPrice = parseFloat((data.price * 0.70).toFixed(1));
+
+      if (isNaN(newDiscPrice)) {
+        showToast("折實單價格式不正確！", "warning");
+        newDiscPrice = parseFloat((data.price * data.discount).toFixed(1));
+      } else if (newDiscPrice < minAllowedDiscPrice) {
+        showToast(`⚠️ 折實單價不可低於定價的 70% ($${minAllowedDiscPrice.toFixed(1)})！`, "error");
+        newDiscPrice = minAllowedDiscPrice;
+      }
+
+      newDiscPrice = parseFloat(newDiscPrice.toFixed(1));
+      discPriceElem.value = newDiscPrice.toFixed(1);
+
+      data.discountPrice = newDiscPrice;
+      data.discount = data.price > 0 ? parseFloat((newDiscPrice / data.price).toFixed(2)) : 1;
+      data.totalPrice = parseFloat((newDiscPrice * data.qty).toFixed(1));
+
+      document.getElementById(`discount_${index}`).value = data.discount;
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
+      updateTotalSummary();
+    }
+
+    function onQtyChange(index) {
+      const data = gridRowsData[index];
+      if (!data) return;
+
+      let qty = parseInt(document.getElementById(`qty_${index}`).value, 10);
+      if (isNaN(qty) || qty < 1) {
+        qty = 1;
+        document.getElementById(`qty_${index}`).value = 1;
+      }
+
+      data.qty = qty;
+      data.totalPrice = parseFloat((data.discountPrice * qty).toFixed(1));
+
+      document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
+      updateTotalSummary();
+    }
+
+    function applyBulkDiscountLimit() {
+      let bulkDisc = parseFloat(document.getElementById('bulkDiscountInput').value);
+      if (isNaN(bulkDisc) || bulkDisc < 0.88) {
+        showToast("整批統一折扣最多 88 折 (0.88)！", "error");
+        bulkDisc = 0.88;
+        document.getElementById('bulkDiscountInput').value = 0.88;
+      }
+
+      gridRowsData.forEach((data, index) => {
+        if (data && typeof data === 'object') {
+          data.discount = bulkDisc;
+          data.discountPrice = parseFloat((data.price * bulkDisc).toFixed(1));
+          data.totalPrice = parseFloat((data.discountPrice * data.qty).toFixed(1));
+
+          document.getElementById(`discount_${index}`).value = bulkDisc;
+          document.getElementById(`discPrice_${index}`).value = data.discountPrice.toFixed(1);
+          document.getElementById(`total_${index}`).innerText = `$${data.totalPrice.toFixed(1)}`;
+        }
+      });
+      updateTotalSummary();
+      showToast(`已套用 ${bulkDisc} 批次折扣`, "success");
+    }
+
+    function updateTotalSummary() {
+      let itemCount = 0, totalQty = 0, totalPrice = 0;
+      gridRowsData.forEach(d => {
+        if (d && typeof d === 'object' && d.seqNo) {
+          itemCount += 1;
+          totalQty += d.qty;
+          totalPrice += d.totalPrice;
+        }
+      });
+      document.getElementById('draftTotalSummary').innerText = `${itemCount} 項 / ${totalQty} 本 / $${totalPrice.toFixed(1)}`;
+      document.getElementById('newOrderItemBadge').innerText = itemCount;
+    }
+
+    function clearOrderFormWithConfirm() {
+      const msg = editingOriginalOrderId
+        ? `確定要放棄修改暫存單 [${editingOriginalOrderId}] 並清空所有欄位嗎？`
+        : "確定要清空目前填寫的所有訂單資料嗎？";
+      if (!confirm(msg)) return;
+      resetOrderForm();
+      showToast("已清空表單資料", "info");
+    }
+
+    function resetOrderForm() {
+      document.getElementById('draftOrderDate').value = getTodayLocal();
+      document.getElementById('draftOrderId').value = "";
+      document.getElementById('draftCustomerName').value = "";
+      document.getElementById('draftPhone').value = "";
+      document.getElementById('draftRemark').value = "";
+      document.getElementById('bulkDiscountInput').value = "";
+
+      document.getElementById('selectBranch').value = "";
+      document.getElementById('selectSchool').innerHTML = '<option value="">-- 請先選擇門市 --</option>';
+      document.getElementById('selectGrade').innerHTML = '<option value="">-- 請先選擇學校 --</option>';
+
+      editingOriginalOrderId = null;
+      document.getElementById('editModeBanner').classList.add('hidden');
+      document.getElementById('editingOrderIdLabel').innerText = "";
+
+      initDynamicGridRows(5);
+      focusDraftOrderId();
+    }
+
+    function validateAndGetFormData() {
+      const dateVal = document.getElementById('draftOrderDate').value.trim();
+      const orderId = document.getElementById('draftOrderId').value.trim();
+      const customerName = document.getElementById('draftCustomerName').value.trim();
+      const phone = document.getElementById('draftPhone').value.trim();
+      const cleanPhone = phone.replace(/[\s-]/g, '');
+      const branch = document.getElementById('selectBranch').value;
+      const schoolElem = document.getElementById('selectSchool');
+      const gradeElem = document.getElementById('selectGrade');
+
+      const school = schoolElem.value;
+      const grade = gradeElem.value;
+
+      if (!dateVal) {
+        showToast("請選擇落單日期！", "error");
+        return null;
+      }
+      if (!orderId) {
+        showToast("請填寫實體單號！", "error");
+        focusDraftOrderId();
+        return null;
+      }
+      if (!/^\d{10}$/.test(orderId)) {
+        showToast(`⚠️ 實體單號必須為 10 位數字 (目前輸入：${orderId})！`, "error");
+        focusDraftOrderId();
+        return null;
+      }
+      if (!customerName || !cleanPhone || !branch || !school || !grade) {
+        showToast("請完整填寫所有基本資料與門市學籍！", "error");
+        return null;
+      }
+      if (cleanPhone.length < 8) {
+        showToast("⚠️ 聯絡電話不可少於 8 位！", "error");
+        const phoneInput = document.getElementById('draftPhone');
+        if (phoneInput) {
+          phoneInput.focus();
+          phoneInput.select();
+        }
+        return null;
+      }
+      if (cleanPhone.length > 8) {
+        alert("⚠️ 提示：聯絡電話超過 8 位（目前 " + cleanPhone.length + " 位），系統仍會繼續儲存，請核對號碼是否正確。");
+      }
+
+      const activeItems = gridRowsData.filter(d => d && typeof d === 'object' && d.seqNo).map(item => ({
+        school: school,
+        seqNo: item.seqNo,
+        bookNo: item.bookNo,
+        bookName: item.bookName,
+        originalPrice: item.originalPrice,
+        defaultPrice: item.defaultPrice,
+        price: item.price,
+        discount: item.discount,
+        discountPrice: item.discountPrice,
+        qty: item.qty,
+        totalPrice: item.totalPrice
+      }));
+
+      if (activeItems.length === 0) {
+        showToast("請至少輸入一筆有效書籍序號！", "error");
+        return null;
+      }
+
+      const seqSet = new Set();
+      for (const item of activeItems) {
+        const s = String(item.seqNo);
+        if (seqSet.has(s)) {
+          showToast(`序號 [${s}] 重複，請檢查訂購明細！`, "error");
+          return null;
+        }
+        seqSet.add(s);
+      }
+
+      const schoolText = schoolElem.options[schoolElem.selectedIndex] ? schoolElem.options[schoolElem.selectedIndex].text : school;
+      const gradeText = gradeElem.options[gradeElem.selectedIndex] ? gradeElem.options[gradeElem.selectedIndex].text : grade;
+      const branchText = document.getElementById('selectBranch').value;
+
+      return {
+        action: "saveDraft",
+        orderId: orderId,
+        originalOrderId: editingOriginalOrderId || "",
+        orderDate: dateVal,
+        customerName: customerName,
+        phone: cleanPhone,
+        schoolNameText: schoolText,
+        gradeText: gradeText,
+        branchText: branchText,
+        items: activeItems,
+        remark: document.getElementById('draftRemark').value,
+        operator: "Admin"
+      };
+    }
+
+    function focusOrderIdOnError(errMsg) {
+      if (String(errMsg || "").includes("單號")) {
+        focusDraftOrderId();
+      }
+    }
+
+    function saveDraftAction() {
+      const payload = validateAndGetFormData();
+      if (!payload) return;
+
+      const btn = document.getElementById('saveDraftBtn');
+      btn.disabled = true;
+      showPrintLoading("正在儲存訂單至暫存區，請稍候...");
+
+      sendGasApi(
+        payload,
+        (res) => {
+          showToast(res.message || "儲存成功！", "success");
+          resetOrderForm();
+          fetchDraftsFromGas();
+        },
+        () => {
+          btn.disabled = false;
+          hidePrintLoading();
+        },
+        (errData) => {
+          focusOrderIdOnError(errData && errData.message);
+        }
+      );
+    }
+
+    function printAndSaveOrderAction() {
+      const payload = validateAndGetFormData();
+      if (!payload) return;
+
+      const btn = document.getElementById('printAndSaveBtn');
+      btn.disabled = true;
+      showPrintLoading("正在儲存訂單並準備三聯單列印畫面，請稍候...");
+
+      sendGasApi(
+        payload,
+        (res) => {
+          showToast(res.message || "儲存成功！正在開啟列印...", "success");
+          triggerPrintReceipt(payload);
+          resetOrderForm();
+          fetchDraftsFromGas();
+        },
+        () => {
+          btn.disabled = false;
+          hidePrintLoading();
+        },
+        (errData) => {
+          focusOrderIdOnError(errData && errData.message);
+        }
+      );
+    }
+
+    // =========================================================================
+    // 🖨️ 三聯單列印邏輯
+    // =========================================================================
+    function toProperCase(str) {
+      return String(str || '').replace(/\b\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    }
+
+    function formatPrintPrice(item) {
+      if (item.price === '' || item.price === undefined) return '';
+      const p = Number(item.price);
+      const origP = Number(item.originalPrice);
+      const defP = Number(item.defaultPrice);
+      const discP = Number(item.discountPrice);
+      const isSpecial = origP > 0 && Math.abs(origP - defP) < 0.05 && Math.abs(p - origP) < 0.05 && Math.abs(discP - defP) < 0.05;
+      return isSpecial ? `${p.toFixed(1)}特` : p.toFixed(1);
+    }
+
+    function renderPrintItemRow(item, idx, startTopMm) {
+      const topMm = (startTopMm + idx * PRINT_LAYOUT_MM.rowStep).toFixed(2);
+      const seqText = toProperCase(item.seqNo);
+      const bookText = `${item.bookNo || ''} ${item.bookName || ''}`.trim();
+      const priceText = formatPrintPrice(item);
+      const discPriceText = item.discountPrice !== '' && item.discountPrice !== undefined ? Number(item.discountPrice).toFixed(1) : '';
+      const qtyText = item.qty !== '' && item.qty !== undefined ? item.qty : '';
+
+      return `
+        <div class="print-abs" style="top:${topMm}mm; left:${PRINT_LAYOUT_MM.colSeq.left}mm; width:${PRINT_LAYOUT_MM.colSeq.width}mm; font-family:Arial,sans-serif; font-size:12pt; font-weight:bold; text-align:center;">${seqText}</div>
+        <div class="print-abs" style="top:${topMm}mm; left:${PRINT_LAYOUT_MM.colBook.left}mm; width:${PRINT_LAYOUT_MM.colBook.width}mm; font-family:'PMingLiU','細明體',serif; font-size:7pt; font-weight:bold;">${bookText}</div>
+        <div class="print-abs" style="top:${topMm}mm; left:${PRINT_LAYOUT_MM.colQty.left}mm; width:${PRINT_LAYOUT_MM.colQty.width}mm; font-family:'PMingLiU','細明體',serif; font-size:12pt; font-weight:bold; text-align:center;">${qtyText}</div>
+        <div class="print-abs" style="top:${topMm}mm; left:${PRINT_LAYOUT_MM.colPrice.left}mm; width:${PRINT_LAYOUT_MM.colPrice.width}mm; font-family:'PMingLiU','細明體',serif; font-size:10pt; font-weight:bold; text-align:center;">${priceText}</div>
+        <div class="print-abs" style="top:${topMm}mm; left:${PRINT_LAYOUT_MM.colDiscPrice.left}mm; width:${PRINT_LAYOUT_MM.colDiscPrice.width}mm; font-family:'PMingLiU','細明體',serif; font-size:10pt; font-weight:bold; text-align:center;">${discPriceText}</div>
+      `;
+    }
+
+    function renderPrintFooter(payload, totalQty, totalPrice, showNextPage) {
+      const dateParts = String(payload.orderDate || getTodayLocal()).split('-');
+      const monthVal = dateParts[1] ? String(parseInt(dateParts[1], 10)) : '';
+      const dayVal = dateParts[2] ? String(parseInt(dateParts[2], 10)) : '';
+
+      return `
+        <div class="print-abs" style="top:${PRINT_LAYOUT_MM.monthTop}mm; left:${PRINT_LAYOUT_MM.monthLeft}mm; font-family:Arial,sans-serif; font-size:12pt; font-weight:bold;">${monthVal}</div>
+        <div class="print-abs" style="top:${PRINT_LAYOUT_MM.dayTop}mm; left:${PRINT_LAYOUT_MM.dayLeft}mm; font-family:Arial,sans-serif; font-size:12pt; font-weight:bold;">${dayVal}</div>
+        ${showNextPage ? `<div class="print-abs" style="top:${PRINT_LAYOUT_MM.nextPageTop}mm; left:${PRINT_LAYOUT_MM.nextPageLeft}mm; font-family:'PMingLiU','細明體',serif; font-size:8pt;">續後頁</div>` : ''}
+        <div class="print-abs" style="top:${PRINT_LAYOUT_MM.totalQtyTop}mm; left:${PRINT_LAYOUT_MM.totalQtyLeft}mm; font-family:'PMingLiU','細明體',serif; font-size:13pt; font-weight:bold;">${totalQty}</div>
+        <div class="print-abs" style="top:${PRINT_LAYOUT_MM.totalPriceTop}mm; left:${PRINT_LAYOUT_MM.totalPriceLeft}mm; font-family:'PMingLiU','細明體',serif; font-size:13pt; font-weight:bold;">${totalPrice.toFixed(1)}</div>
+        <div class="print-abs" style="top:${PRINT_LAYOUT_MM.schoolTop}mm; left:${PRINT_LAYOUT_MM.schoolLeft}mm; font-family:'PMingLiU','細明體',serif; font-size:13pt; font-weight:bold;">${payload.schoolNameText}</div>
+        <div class="print-abs" style="top:${PRINT_LAYOUT_MM.gradeTop}mm; left:${PRINT_LAYOUT_MM.gradeLeft}mm; font-family:'PMingLiU','細明體',serif; font-size:10pt; font-weight:bold;">${payload.gradeText}</div>
+      `;
+    }
+
+    function renderPage1Grid(page1Items) {
+      let rowsHtml = '';
+      for (let i = 0; i < 35; i++) {
+        const seqNum = i + 16;
+        const item = page1Items[i] || null;
+        const seqText = item ? toProperCase(item.seqNo) : '';
+        const bookText = item ? `${item.bookNo || ''} ${item.bookName || ''}`.trim() : '';
+        const qtyText = item ? item.qty : '';
+        const priceText = item ? formatPrintPrice(item) : '';
+        const discPriceText = item ? Number(item.discountPrice).toFixed(1) : '';
+
+        rowsHtml += `
+          <tr style="height:5.35mm;">
+            <td style="text-align:center; font-family:Arial,sans-serif; font-size:7.5pt; padding:0 1px;">${seqNum}.</td>
+            <td style="text-align:center; font-family:Arial,sans-serif; font-size:10pt; font-weight:bold; padding:0 1px;">${seqText}</td>
+            <td style="font-family:'PMingLiU','細明體',serif; font-size:6.5pt; font-weight:bold; padding:0 2px; line-height:1.05;">${bookText}</td>
+            <td style="padding:0 1px;"></td>
+            <td style="text-align:center; font-family:'PMingLiU','細明體',serif; font-size:10pt; font-weight:bold; padding:0 1px;">${qtyText}</td>
+            <td style="text-align:center; font-family:'PMingLiU','細明體',serif; font-size:9.5pt; font-weight:bold; padding:0 1px;">${priceText}</td>
+            <td style="text-align:center; font-family:'PMingLiU','細明體',serif; font-size:9.5pt; font-weight:bold; padding:0 1px;">${discPriceText}</td>
+            <td style="border-right:none; text-align:right; font-size:7.5pt; padding:0 2px;">月</td>
+            <td style="border-left:none; text-align:right; font-size:7.5pt; padding:0 2px;">日</td>
+          </tr>
+        `;
+      }
+
+      return `
+        <table class="print-grid-table">
+          <thead>
+            <tr style="height:5.8mm;">
+              <th style="width:8mm; padding:0 1px;"></th>
+              <th style="width:14mm; font-family:Arial,sans-serif; padding:0 1px;">課本編號</th>
+              <th style="width:78mm; padding:0 2px;">書名</th>
+              <th style="width:20mm; padding:0 1px;">出版社</th>
+              <th style="width:14mm; padding:0 1px;">數量</th>
+              <th style="width:16mm; padding:0 1px;">原價</th>
+              <th style="width:16mm; padding:0 1px;">折實價</th>
+              <th colspan="2" style="width:22mm; padding:0 1px;">取書日期</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    function triggerPrintReceipt(payload) {
+      const items = payload.items.slice(0, 50);
+      const itemCount = items.length;
+      let totalQty = 0, totalPrice = 0;
+      items.forEach(item => {
+        totalQty += Number(item.qty) || 0;
+        totalPrice += Number(item.totalPrice) || 0;
+      });
+
+      const container = document.getElementById('printableReceipt');
+
+      if (itemCount <= 15) {
+        const rowsHtml = items.map((item, idx) => renderPrintItemRow(item, idx, PRINT_LAYOUT_MM.page2StartTop)).join('');
+        const footerHtml = renderPrintFooter(payload, totalQty, totalPrice, false);
+        container.innerHTML = `<div class="print-page">${rowsHtml}${footerHtml}</div>`;
+      } else {
+        const page2Items = items.slice(0, 15);
+        const page1Items = items.slice(15, 50);
+
+        const page1GridHtml = renderPage1Grid(page1Items);
+        const page2Rows = page2Items.map((item, idx) => renderPrintItemRow(item, idx, PRINT_LAYOUT_MM.page2StartTop)).join('');
+        const page2Footer = renderPrintFooter(payload, totalQty, totalPrice, true);
+
+        container.innerHTML = `
+          <div class="print-page">${page1GridHtml}</div>
+          <div class="print-page">${page2Rows}${page2Footer}</div>
+        `;
+      }
+
+      hidePrintLoading();
+      container.classList.remove('hidden');
+      window.print();
+      container.classList.add('hidden');
+    }
+
+    // =========================================================================
+    // TAB 2: 暫存訂單 (待確認) 邏輯
+    // =========================================================================
+    function onDraftStartDateChange() {
+      const startInput = document.getElementById('filterDraftStartDate');
+      const endInput = document.getElementById('filterDraftEndDate');
+      if (startInput.value && (!endInput.value || endInput.value < startInput.value)) {
+        endInput.value = startInput.value;
+      }
+      renderPendingDraftsTable();
+    }
+
+    function getFilteredAndSortedDrafts() {
+      const startDate = document.getElementById('filterDraftStartDate').value;
+      const endDate = document.getElementById('filterDraftEndDate').value;
+      const keyword = document.getElementById('filterDraftKeyword').value.trim().toLowerCase();
+
+      return pendingDrafts
+        .filter(d => {
+          if (startDate && d.orderDate < startDate) return false;
+          if (endDate && d.orderDate > endDate) return false;
+          if (keyword) {
+            const text = `${d.orderId} ${d.customerName} ${d.phone} ${d.school} ${d.branch}`.toLowerCase();
+            if (!text.includes(keyword)) return false;
+          }
+          return true;
+        })
+        .sort((a, b) => String(a.orderId).localeCompare(String(b.orderId), undefined, { numeric: true, sensitivity: 'base' }));
+    }
+
+    function renderPendingDraftsTable() {
+      const tbody = document.getElementById('pendingDraftsTableBody');
+      const list = getFilteredAndSortedDrafts();
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-400">目前沒有符合條件的暫存訂單</td></tr>`;
+        document.getElementById('selectAllDraftsCheckbox').checked = false;
+        updateSelectedDraftsUI();
+        return;
+      }
+
+      let allVisibleSelected = true;
+      const rowsHtml = list.map(d => {
+        const isChecked = selectedDraftIds.has(d.orderId);
+        if (!isChecked) allVisibleSelected = false;
+
+        return `
+          <tr class="hover:bg-blue-50/40 transition-colors">
+            <td class="p-3 text-center">
+              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelectDraft('${d.orderId}')" class="w-4 h-4 rounded accent-blue-600 cursor-pointer">
+            </td>
+            <td class="p-3 font-mono text-slate-600 whitespace-nowrap">${d.orderDate}</td>
+            <td class="p-3 font-mono">
+              <button onclick="loadDraftIntoEditor('${d.orderId}')" class="text-blue-600 hover:text-blue-800 hover:underline font-bold text-left" title="點擊進入修改">
+                ${d.orderId}
+              </button>
+            </td>
+            <td class="p-3 font-medium text-slate-900">${d.customerName}</td>
+            <td class="p-3 font-mono text-slate-600">${d.phone}</td>
+            <td class="p-3 text-slate-600">${d.branch || '-'}</td>
+            <td class="p-3 text-slate-800 font-medium">${d.school}</td>
+            <td class="p-3 text-slate-600">${d.grade || '-'}</td>
+            <td class="p-3 text-right font-mono font-bold text-slate-800">${d.totalQty}</td>
+            <td class="p-3 text-right font-mono font-bold text-emerald-600">$${Number(d.totalPrice).toFixed(1)}</td>
+            <td class="p-3 text-center">
+              <button onclick="deleteDraftAction('${d.orderId}')" class="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-all" title="刪除暫存單">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rowsHtml;
+      document.getElementById('selectAllDraftsCheckbox').checked = allVisibleSelected;
+      updateSelectedDraftsUI();
+    }
+
+    function toggleSelectDraft(orderId) {
+      if (selectedDraftIds.has(orderId)) {
+        selectedDraftIds.delete(orderId);
+      } else {
+        selectedDraftIds.add(orderId);
+      }
+      renderPendingDraftsTable();
+    }
+
+    function toggleSelectAllVisibleDrafts() {
+      const checked = document.getElementById('selectAllDraftsCheckbox').checked;
+      const visibleList = getFilteredAndSortedDrafts();
+      visibleList.forEach(d => {
+        if (checked) {
+          selectedDraftIds.add(d.orderId);
+        } else {
+          selectedDraftIds.delete(d.orderId);
+        }
+      });
+      renderPendingDraftsTable();
+    }
+
+    function updateSelectedDraftsUI() {
+      document.getElementById('selectedDraftsCount').innerText = selectedDraftIds.size;
+      let totalSelectedPrice = 0;
+      pendingDrafts.forEach(d => {
+        if (selectedDraftIds.has(d.orderId)) {
+          totalSelectedPrice += Number(d.totalPrice) || 0;
+        }
+      });
+      document.getElementById('selectedDraftsTotalPrice').innerText = `$${totalSelectedPrice.toFixed(1)}`;
+    }
+
+    function clearDraftFilters() {
+      document.getElementById('filterDraftStartDate').value = "";
+      document.getElementById('filterDraftEndDate').value = "";
+      document.getElementById('filterDraftKeyword').value = "";
+      renderPendingDraftsTable();
+    }
+
+    function loadDraftIntoEditor(orderId) {
+      const draft = pendingDrafts.find(d => d.orderId === orderId);
+      if (!draft) return;
+
+      editingOriginalOrderId = draft.orderId;
+      document.getElementById('editModeBanner').classList.remove('hidden');
+      document.getElementById('editingOrderIdLabel').innerText = draft.orderId;
+
+      document.getElementById('draftOrderDate').value = draft.orderDate;
+      document.getElementById('draftOrderId').value = draft.orderId;
+      document.getElementById('draftCustomerName').value = draft.customerName;
+      document.getElementById('draftPhone').value = draft.phone;
+      document.getElementById('draftRemark').value = draft.remark || "";
+
+      document.getElementById('selectBranch').value = draft.branch;
+      onBranchChange();
+      document.getElementById('selectSchool').value = draft.school;
+      onSchoolChange();
+      document.getElementById('selectGrade').value = draft.grade;
+
+      if (draft.items && draft.items.length > 0) {
+        gridRowsData = draft.items.map(item => {
+          const prod = mockProducts.find(p =>
+            String(p.branch).trim() === String(draft.branch).trim() &&
+            String(p.school).trim() === String(draft.school).trim() &&
+            String(p.grade).trim() === String(draft.grade).trim() &&
+            parseInt(p.seqNo, 10) === parseInt(item.seqNo, 10)
+          );
+          const origPrice = prod ? (parseFloat(prod.price) || item.price) : item.price;
+          const defPrice = prod ? (parseFloat(prod.defaultPrice) || origPrice) : origPrice;
+          return {
+            seqNo: item.seqNo,
+            bookNo: item.bookNo,
+            bookName: item.bookName,
+            originalPrice: origPrice,
+            defaultPrice: defPrice,
+            price: item.price,
+            discount: item.discount,
+            discountPrice: item.discountPrice,
+            qty: item.qty,
+            totalPrice: item.totalPrice
+          };
+        });
+      } else {
+        gridRowsData = new Array(5).fill(null);
+      }
+
+      renderGridBody();
+      switchTab('newOrder');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast(`已載入暫存單 [${orderId}] 供修改`, "info");
+    }
+
+    function deleteDraftAction(orderId) {
+      if (!confirm(`確定要刪除暫存單 [${orderId}] 嗎？此操作將寫入系統日誌且無法復原！`)) return;
+
+      sendGasApi({ action: "deleteDraft", orderId: orderId, operator: "Admin" }, (res) => {
+        showToast(res.message || "已刪除暫存單", "success");
+        selectedDraftIds.delete(orderId);
+        fetchDraftsFromGas();
+      });
+    }
+
+    function batchCommitDraftsAction() {
+      const idsToCommit = Array.from(selectedDraftIds);
+      if (idsToCommit.length === 0) {
+        showToast("請先勾選至少一張要過數的暫存訂單！", "warning");
+        return;
+      }
+
+      if (!confirm(`確定要將勾選的 ${idsToCommit.length} 張暫存訂單正式轉入大表嗎？`)) return;
+
+      const btn = document.getElementById('batchCommitBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>處理中...</span>`;
+
+      sendGasApi({ action: "batchCommitToOrders", orderIds: idsToCommit, operator: "Admin" }, (res) => {
+        showToast(res.message || "批次過數成功！", "success");
+        selectedDraftIds.clear();
+        fetchDraftsFromGas();
+      }, () => {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>確認過數 (轉入大表)</span>`;
+      });
+    }
+
+    // =========================================================================
+    // TAB 3: 訂單進度篩選與排序
+    // =========================================================================
+    function onOrderStartDateChange() {
+      const startInput = document.getElementById('filterOrderStartDate');
+      const endInput = document.getElementById('filterOrderEndDate');
+      if (startInput.value && (!endInput.value || endInput.value < startInput.value)) {
+        endInput.value = startInput.value;
+      }
+      renderOrdersTable();
+    }
+
+    function clearOrderFilters() {
+      document.getElementById('filterOrderStartDate').value = "";
+      document.getElementById('filterOrderEndDate').value = "";
+      document.getElementById('filterOrderKeyword').value = "";
+      renderOrdersTable();
+    }
+
+    function getFilteredOrders() {
+      const startDate = document.getElementById('filterOrderStartDate').value;
+      const endDate = document.getElementById('filterOrderEndDate').value;
+      const keyword = document.getElementById('filterOrderKeyword').value.trim().toLowerCase();
+
+      return ordersList
+        .filter(o => {
+          const orderIso = extractIsoDate(o.orderDate);
+          if (startDate && orderIso && orderIso < startDate) return false;
+          if (endDate && orderIso && orderIso > endDate) return false;
+          if (keyword) {
+            const text = `${o.orderId} ${o.customerName} ${o.phone} ${o.school} ${o.grade} ${o.bookNo} ${o.bookName}`.toLowerCase();
+            if (!text.includes(keyword)) return false;
+          }
+          return true;
+        })
+        .sort((a, b) => {
+          const orderCmp = String(a.orderId || '').localeCompare(String(b.orderId || ''), undefined, { numeric: true, sensitivity: 'base' });
+          if (orderCmp !== 0) return orderCmp;
+          return (parseInt(a.seqNo, 10) || 0) - (parseInt(b.seqNo, 10) || 0);
+        });
+    }
+
+    function getStatusBadgeClass(status) {
+      if (status === '已取貨' || status === '已完成') return 'bg-emerald-100 text-emerald-700';
+      if (status === '已到貨') return 'bg-blue-100 text-blue-700';
+      if (status === '在訂中') return 'bg-amber-100 text-amber-700';
+      if (status === '已取消') return 'bg-red-100 text-red-700';
+      return 'bg-slate-100 text-slate-700';
+    }
+
+    function renderOrdersTable() {
+      const tbody = document.getElementById('ordersTableBody');
+      const list = getFilteredOrders();
+      document.getElementById('filteredOrdersCount').innerText = list.length;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400">目前沒有符合條件的正式訂單</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(o => {
+        const internalDate = o.internalUpdateDate || '-';
+        const publicDate = o.publicUpdateDate || '-';
+
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-blue-600 whitespace-nowrap">${o.orderId}</td>
+            <td class="p-3 text-slate-600 whitespace-nowrap">${formatMonthDay(o.orderDate)}</td>
+            <td class="p-3 font-sans">
+              <div class="font-medium text-slate-900">${o.customerName || '-'}</div>
+              <div class="text-slate-400 font-mono">${o.phone || '-'}</div>
+            </td>
+            <td class="p-3 font-sans">
+              <div class="text-slate-800 font-medium">${o.school || '-'}</div>
+              <div class="text-slate-500">${o.grade || '-'}</div>
+            </td>
+            <td class="p-3 text-center font-bold text-slate-700">${o.seqNo || '-'}</td>
+            <td class="p-3 font-sans">
+              <div class="font-mono text-slate-500">${o.bookNo || '-'}</div>
+              <div class="text-slate-800 font-medium">${o.bookName || '-'}</div>
+            </td>
+            <td class="p-3 text-center font-bold text-slate-800">${o.qty || 1}</td>
+            <td class="p-3 text-right font-bold text-slate-900">$${Number(o.totalPrice || 0).toFixed(1)}</td>
+            <td class="p-3 font-sans">
+              <span class="px-2 py-0.5 rounded-full font-medium inline-block ${getStatusBadgeClass(o.internalStatus)}">${o.internalStatus || '-'}</span>
+              <div class="text-[11px] text-slate-400 font-mono mt-1">${internalDate}</div>
+            </td>
+            <td class="p-3 font-sans">
+              <span class="px-2 py-0.5 rounded-full font-medium inline-block ${getStatusBadgeClass(o.publicStatus)}">${o.publicStatus || '-'}</span>
+              <div class="text-[11px] text-slate-400 font-mono mt-1">${publicDate}</div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // TAB 4: 智能配貨中心邏輯
+    // =========================================================================
+    function switchAllocSubTab(subId) {
+      document.querySelectorAll('.alloc-subtab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.alloc-btn').forEach(btn => {
+        btn.classList.remove('bg-teal-600', 'text-white', 'shadow-sm');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      document.getElementById(`allocSub-${subId}`).classList.add('active');
+      const targetBtn = document.getElementById(`allocBtn-${subId}`);
+      targetBtn.classList.remove('bg-slate-100', 'text-slate-600');
+      targetBtn.classList.add('bg-teal-600', 'text-white', 'shadow-sm');
+
+      if (subId === 'arrival') {
+        setTimeout(() => {
+          const inp = document.getElementById('arrivalBookNoInput');
+          if (inp) inp.focus();
+        }, 50);
+      }
+    }
+
+    function refreshAllocationData() {
+      showPrintLoading("正在同步最新訂單與書單資料...");
+      fetchOrdersFromGas(() => {
+        hidePrintLoading();
+        showToast("已更新配貨資料", "success");
+        if (document.getElementById('arrivalBookNoInput').value.trim()) searchArrivalOrders();
+        if (document.getElementById('pickupSearchInput').value.trim()) searchPickupOrders();
+      });
+    }
+
+    function getSupplierByBookNo(bookNo) {
+      const found = mockProducts.find(p => String(p.bookNo || '').trim() === String(bookNo || '').trim());
+      return found && found.supplier ? String(found.supplier).trim() : '未指定供應商';
+    }
+
+    function populateSupplierDropdown() {
+      updateSupplierDropdownWithCounts();
+    }
+
+    function updateSupplierDropdownWithCounts() {
+      const select = document.getElementById('filterShortageSupplier');
+      if (!select) return;
+      const curVal = select.value;
+
+      const supplierQtyMap = {};
+      let grandTotal = 0;
+
+      ordersList.forEach(o => {
+        if ((o.internalStatus || '新訂單') !== '新訂單') return;
+        const bNo = String(o.bookNo || '').trim();
+        if (!bNo) return;
+        const sup = getSupplierByBookNo(bNo);
+        const qty = Number(o.qty) || 1;
+        supplierQtyMap[sup] = (supplierQtyMap[sup] || 0) + qty;
+        grandTotal += qty;
+      });
+
+      const allSuppliers = new Set([
+        ...mockProducts.map(p => String(p.supplier || '').trim()).filter(Boolean),
+        ...Object.keys(supplierQtyMap)
+      ]);
+
+      const sortedSuppliers = Array.from(allSuppliers).sort((a, b) => a.localeCompare(b));
+
+      let html = `<option value="">-- 全部供應商 (共 ${grandTotal} 本) --</option>`;
+      sortedSuppliers.forEach(s => {
+        const qty = supplierQtyMap[s] || 0;
+        html += `<option value="${s}">${s} (${qty} 本)</option>`;
+      });
+
+      select.innerHTML = html;
+      if (curVal && allSuppliers.has(curVal)) {
+        select.value = curVal;
+      }
+    }
+
+    // 步驟 1: 欠書匯總
+    function getShortageSummaryList() {
+      const map = {};
+      ordersList.forEach(o => {
+        if ((o.internalStatus || '新訂單') !== '新訂單') return;
+        const bNo = String(o.bookNo || '').trim();
+        if (!bNo) return;
+        if (!map[bNo]) {
+          map[bNo] = {
+            bookNo: bNo,
+            bookName: o.bookName || '-',
+            supplier: getSupplierByBookNo(bNo),
+            orderIds: new Set(),
+            totalQty: 0
+          };
+        }
+        map[bNo].orderIds.add(o.orderId);
+        map[bNo].totalQty += (Number(o.qty) || 1);
+      });
+
+      const supplierFilter = document.getElementById('filterShortageSupplier').value;
+      const keyword = document.getElementById('filterShortageKeyword').value.trim().toLowerCase();
+
+      return Object.values(map)
+        .filter(item => {
+          if (supplierFilter && item.supplier !== supplierFilter) return false;
+          if (keyword && !`${item.bookNo} ${item.bookName} ${item.supplier}`.toLowerCase().includes(keyword)) return false;
+          return true;
+        })
+        .sort((a, b) => a.supplier.localeCompare(b.supplier) || a.bookNo.localeCompare(b.bookNo));
+    }
+
+    function renderShortageTable() {
+      updateSupplierDropdownWithCounts();
+      const list = getShortageSummaryList();
+      document.getElementById('shortageBadge').innerText = list.length;
+
+      const tbody = document.getElementById('shortageTableBody');
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">目前沒有狀態為【新訂單】的欠書</td></tr>`;
+        document.getElementById('selectAllShortageCheckbox').checked = false;
+        return;
+      }
+
+      let allSelected = true;
+      tbody.innerHTML = list.map(item => {
+        const checked = selectedShortageBookNos.has(item.bookNo);
+        if (!checked) allSelected = false;
+        return `
+          <tr class="hover:bg-teal-50/40">
+            <td class="p-3 text-center">
+              <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleShortageSelect('${item.bookNo}')" class="w-4 h-4 rounded accent-teal-600 cursor-pointer">
+            </td>
+            <td class="p-3 font-medium text-slate-700">${item.supplier}</td>
+            <td class="p-3 font-mono font-bold text-blue-600">${item.bookNo}</td>
+            <td class="p-3 font-sans text-slate-800">${item.bookName}</td>
+            <td class="p-3 text-center font-mono text-slate-600">${item.orderIds.size}</td>
+            <td class="p-3 text-right font-mono font-bold text-teal-700 text-sm">${item.totalQty}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('selectAllShortageCheckbox').checked = allSelected;
+    }
+
+    function toggleShortageSelect(bookNo) {
+      if (selectedShortageBookNos.has(bookNo)) selectedShortageBookNos.delete(bookNo);
+      else selectedShortageBookNos.add(bookNo);
+      renderShortageTable();
+    }
+
+    function toggleSelectAllShortage() {
+      const checked = document.getElementById('selectAllShortageCheckbox').checked;
+      getShortageSummaryList().forEach(item => {
+        if (checked) selectedShortageBookNos.add(item.bookNo);
+        else selectedShortageBookNos.delete(item.bookNo);
+      });
+      renderShortageTable();
+    }
+
+    function exportShortageCsv() {
+      const list = getShortageSummaryList().filter(i => selectedShortageBookNos.size === 0 || selectedShortageBookNos.has(i.bookNo));
+      if (list.length === 0) {
+        showToast("沒有可匯出的欠書資料！", "warning");
+        return;
+      }
+      let csv = "\uFEFF供應商,書號/ISBN,書名,涉及訂單數,總訂購數量\n";
+      list.forEach(i => {
+        csv += `"${i.supplier.replace(/"/g, '""')}","${i.bookNo}","${String(i.bookName).replace(/"/g, '""')}",${i.orderIds.size},${i.totalQty}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `欠書訂貨單_${getTodayLocal()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("已匯出訂貨單 CSV", "success");
+    }
+
+    function confirmPurchaseOrderAction() {
+      const bookNos = Array.from(selectedShortageBookNos);
+      if (bookNos.length === 0) {
+        showToast("請先勾選已向供應商訂購的書籍！", "warning");
+        return;
+      }
+      const orderDate = document.getElementById('purchaseOrderDateInput').value || getTodayLocal();
+      if (!confirm(`確定已向供應商訂購這 ${bookNos.length} 項書號？\n系統將填入訂貨日期 (${orderDate}) 並將內／外部狀態改為【在訂中】。`)) return;
+
+      showPrintLoading("正在更新訂貨狀態為【在訂中】...");
+      sendGasApi({ action: "batchPurchaseOrder", bookNos: bookNos, orderDate: orderDate, operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        selectedShortageBookNos.clear();
+        fetchOrdersFromGas();
+      }, () => hidePrintLoading());
+    }
+
+    // 步驟 2: 到貨點貨配貨
+    function searchArrivalOrders() {
+      const rawInput = document.getElementById('arrivalBookNoInput').value.trim();
+      if (!rawInput) {
+        showToast("請輸入要點貨的書號 / ISBN！", "warning");
+        return;
+      }
+
+      const cleanInput = rawInput.replace(/[-\s]/g, '');
+      const is13Digits = /^\d{13}$/.test(cleanInput);
+      const core9 = is13Digits ? cleanInput.slice(3, 12) : '';
+      const rawLower = cleanInput.toLowerCase();
+
+      currentArrivalMatches = ordersList
+        .filter(o => {
+          if (o.internalStatus !== '在訂中') return false;
+          const bNo = String(o.bookNo || '').replace(/[-\s]/g, '').trim().toLowerCase();
+          return bNo === rawLower || (core9 && (bNo === core9 || bNo.includes(core9)));
+        })
+        .sort((a, b) => {
+          const dCmp = extractIsoDate(a.orderDate).localeCompare(extractIsoDate(b.orderDate));
+          if (dCmp !== 0) return dCmp;
+          return String(a.orderId).localeCompare(String(b.orderId), undefined, { numeric: true });
+        });
+
+      autoSelectArrivalRows(core9);
+
+      setTimeout(() => {
+        const qtyInput = document.getElementById('arrivalQtyInput');
+        if (qtyInput) {
+          qtyInput.focus();
+          qtyInput.select();
+        }
+      }, 50);
+    }
+
+    function autoSelectArrivalRows(extractedCore9 = '') {
+      const receivedQty = parseInt(document.getElementById('arrivalQtyInput').value, 10) || 0;
+      selectedArrivalRowIndices.clear();
+      let remaining = receivedQty;
+
+      currentArrivalMatches.forEach(o => {
+        const need = Number(o.qty) || 1;
+        if (remaining >= need) {
+          selectedArrivalRowIndices.add(o.rowIndex);
+          remaining -= need;
+        }
+      });
+      renderArrivalTable(extractedCore9);
+    }
+
+    function toggleArrivalRow(rowIndex) {
+      if (selectedArrivalRowIndices.has(rowIndex)) selectedArrivalRowIndices.delete(rowIndex);
+      else selectedArrivalRowIndices.add(rowIndex);
+      renderArrivalTable();
+    }
+
+    function renderArrivalTable(extractedCore9 = '') {
+      const tbody = document.getElementById('arrivalOrdersTableBody');
+      const hint = document.getElementById('arrivalSummaryHint');
+
+      if (currentArrivalMatches.length === 0) {
+        const hasSearch = document.getElementById('arrivalBookNoInput').value.trim() !== "";
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">${hasSearch ? '找不到此書號且狀態為【在訂中】的訂單' : '請輸入書號並點擊「查詢待配訂單」'}</td></tr>`;
+        hint.innerText = "";
+        return;
+      }
+
+      let totalNeed = 0, selectedQty = 0;
+      currentArrivalMatches.forEach(o => {
+        const q = Number(o.qty) || 1;
+        totalNeed += q;
+        if (selectedArrivalRowIndices.has(o.rowIndex)) selectedQty += q;
+      });
+
+      const coreHint = extractedCore9 ? `<span class="text-indigo-600 mr-2">[已自動擷取第 4–12 碼: ${extractedCore9}]</span>` : '';
+      hint.innerHTML = `${coreHint}共找到 <strong class="text-blue-600">${currentArrivalMatches.length}</strong> 筆在訂訂單（總欠 <strong class="text-slate-800">${totalNeed}</strong> 本），目前已勾選配貨 <strong class="text-teal-600">${selectedQty}</strong> 本。`;
+
+      tbody.innerHTML = currentArrivalMatches.map(o => {
+        const checked = selectedArrivalRowIndices.has(o.rowIndex);
+        return `
+          <tr class="hover:bg-teal-50/40">
+            <td class="p-3 text-center">
+              <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleArrivalRow(${o.rowIndex})" class="w-4 h-4 rounded accent-teal-600 cursor-pointer">
+            </td>
+            <td class="p-3 font-mono font-bold text-blue-600">${o.orderId}</td>
+            <td class="p-3 font-mono text-slate-600">${formatMonthDay(o.orderDate)}</td>
+            <td class="p-3"><div class="font-medium text-slate-900">${o.customerName}</div><div class="text-slate-400 font-mono">${o.phone}</div></td>
+            <td class="p-3"><div>${o.school}</div><div class="text-slate-500">${o.grade}</div></td>
+            <td class="p-3 text-slate-800">${o.bookName}</td>
+            <td class="p-3 text-center font-mono font-bold text-slate-900">${o.qty}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">${o.internalStatus}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function resetArrivalViewToInitial() {
+      document.getElementById('arrivalBookNoInput').value = "";
+      document.getElementById('arrivalQtyInput').value = "1";
+      currentArrivalMatches = [];
+      selectedArrivalRowIndices.clear();
+      renderArrivalTable();
+      setTimeout(() => {
+        const isbnInput = document.getElementById('arrivalBookNoInput');
+        if (isbnInput) isbnInput.focus();
+      }, 60);
+    }
+
+    function confirmArrivalAction() {
+      const rowIndices = Array.from(selectedArrivalRowIndices);
+      if (rowIndices.length === 0) {
+        showToast("請先勾選要配貨到店的訂單！", "warning");
+        return;
+      }
+      const arrivalDate = document.getElementById('arrivalDateInput').value || getTodayLocal();
+      if (!confirm(`確定將勾選的 ${rowIndices.length} 筆訂單標記為內部【已到貨】？\n（對外狀態將維持【在訂中】，並於明天自動公開為已到貨）`)) return;
+
+      showPrintLoading("正在更新到貨狀態...");
+      sendGasApi({ action: "confirmArrivalByRows", rowIndices: rowIndices, arrivalDate: arrivalDate, operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        resetArrivalViewToInitial();
+        fetchOrdersFromGas();
+      }, () => hidePrintLoading());
+    }
+
+    function manualSyncPublicArrivedAction(includeToday) {
+      const msg = includeToday
+        ? "確定要立即發布所有「今日（及之前）到貨」的內部已到貨訂單至對外公開狀態嗎？"
+        : "確定要立即發布所有「昨日（及之前）到貨」的內部已到貨訂單至對外公開狀態嗎？";
+      if (!confirm(msg)) return;
+
+      showPrintLoading("正在同步對外狀態...");
+      sendGasApi({ action: "syncPublicArrived", includeToday: Boolean(includeToday), operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        fetchOrdersFromGas();
+      }, () => hidePrintLoading());
+    }
+
+    // 步驟 3: 門市取貨核對
+    function searchPickupOrders() {
+      const kw = document.getElementById('pickupSearchInput').value.trim().toLowerCase();
+      if (!kw) {
+        showToast("請輸入實體單號、電話或客人姓名！", "warning");
+        return;
+      }
+      selectedPickupRowIndices.clear();
+      currentPickupMatches = ordersList
+        .filter(o => `${o.orderId} ${o.phone} ${o.customerName}`.toLowerCase().includes(kw))
+        .sort((a, b) => String(a.orderId).localeCompare(String(b.orderId), undefined, { numeric: true }) || (parseInt(a.seqNo, 10) || 0) - (parseInt(b.seqNo, 10) || 0));
+
+      renderPickupTable();
+    }
+
+    function selectAllArrivedForPickup() {
+      currentPickupMatches.forEach(o => {
+        if (o.internalStatus === '已到貨') {
+          selectedPickupRowIndices.add(o.rowIndex);
+        }
+      });
+      renderPickupTable();
+    }
+
+    function togglePickupRow(rowIndex) {
+      if (selectedPickupRowIndices.has(rowIndex)) selectedPickupRowIndices.delete(rowIndex);
+      else selectedPickupRowIndices.add(rowIndex);
+      renderPickupTable();
+    }
+
+    function renderPickupTable() {
+      const tbody = document.getElementById('pickupOrdersTableBody');
+      if (currentPickupMatches.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">找不到符合條件的訂單</td></tr>`;
+        document.getElementById('pickupSelectedSummary').innerText = "0 本 / $0.0";
+        return;
+      }
+
+      let totalQty = 0, totalPrice = 0;
+      currentPickupMatches.forEach(o => {
+        if (selectedPickupRowIndices.has(o.rowIndex)) {
+          totalQty += Number(o.qty) || 1;
+          totalPrice += Number(o.totalPrice) || 0;
+        }
+      });
+      document.getElementById('pickupSelectedSummary').innerText = `${totalQty} 本 / $${totalPrice.toFixed(1)}`;
+
+      tbody.innerHTML = currentPickupMatches.map(o => {
+        const canPickup = o.internalStatus === '已到貨';
+        const checked = selectedPickupRowIndices.has(o.rowIndex);
+        return `
+          <tr class="hover:bg-blue-50/40 ${canPickup ? '' : 'opacity-65 bg-slate-50/60'}">
+            <td class="p-3 text-center">
+              ${canPickup
+                ? `<input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePickupRow(${o.rowIndex})" class="w-4 h-4 rounded accent-blue-600 cursor-pointer">`
+                : `<span class="text-slate-300">-</span>`
+              }
+            </td>
+            <td class="p-3 font-mono font-bold text-blue-600">${o.orderId}</td>
+            <td class="p-3"><div class="font-medium text-slate-900">${o.customerName}</div><div class="text-slate-400 font-mono">${o.phone}</div></td>
+            <td class="p-3 text-center font-mono font-bold">${o.seqNo}</td>
+            <td class="p-3"><div class="font-mono text-slate-500">${o.bookNo}</div><div class="text-slate-800 font-medium">${o.bookName}</div></td>
+            <td class="p-3 text-center font-mono font-bold">${o.qty}</td>
+            <td class="p-3 text-right font-mono font-bold text-slate-900">$${Number(o.totalPrice || 0).toFixed(1)}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded-full font-medium ${getStatusBadgeClass(o.internalStatus)}">${o.internalStatus}</span></td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded-full font-medium ${getStatusBadgeClass(o.publicStatus)}">${o.publicStatus}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function confirmPickupAction() {
+      const rowIndices = Array.from(selectedPickupRowIndices);
+      if (rowIndices.length === 0) {
+        showToast("請先勾選客人要領取的【已到貨】書籍！", "warning");
+        return;
+      }
+      const summary = document.getElementById('pickupSelectedSummary').innerText;
+      if (!confirm(`確認客人已核對並領取以下書籍？\n總計：${summary}\n確定後內／外部狀態將同步改為【已取貨】。`)) return;
+
+      showPrintLoading("正在更新取貨狀態...");
+      sendGasApi({ action: "confirmPickupByRows", rowIndices: rowIndices, pickupDate: getTodayLocal(), operator: "Admin" }, (res) => {
+        showToast(res.message, "success");
+        fetchOrdersFromGas(() => searchPickupOrders());
+      }, () => hidePrintLoading());
+    }
+
+    // =========================================================================
+    // 其他分頁切換與渲染
+    // =========================================================================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-blue-500', 'text-white');
+        btn.classList.add('border-transparent', 'text-slate-400');
+      });
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      const targetBtn = document.getElementById(`tabBtn-${tabId}`);
+      targetBtn.classList.add('active', 'border-blue-500', 'text-white');
+      targetBtn.classList.remove('border-transparent', 'text-slate-400');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+
+      if (tabId === 'pendingDrafts') fetchDraftsFromGas();
+      if (tabId === 'orders' || tabId === 'allocation') fetchOrdersFromGas();
+      if (tabId === 'logs') fetchLogsFromGas();
+    }
+
+    function renderProductsTable(products) {
+      const tbody = document.getElementById('productsTableBody');
+      document.getElementById('productCount').innerText = products.length;
+      tbody.innerHTML = products.map(p => `
+        <tr class="hover:bg-slate-50 border-b border-slate-100">
+          <td class="p-3 text-slate-500">${p.branch || '-'}</td>
+          <td class="p-3 font-semibold text-slate-800">${p.school}</td>
+          <td class="p-3">${p.grade}</td>
+          <td class="p-3 font-bold text-blue-600">${p.seqNo}</td>
+          <td class="p-3 text-slate-500">${p.bookNo}</td>
+          <td class="p-3 font-medium text-slate-900">${p.bookName}</td>
+          <td class="p-3 text-slate-400">$${parseFloat(p.price || 0).toFixed(1)}</td>
+          <td class="p-3 font-bold text-emerald-600">$${parseFloat(p.defaultPrice || 0).toFixed(1)}</td>
+          <td class="p-3 text-slate-600 font-sans">${p.supplier || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderLogsTable() {
+      const tbody = document.getElementById('logsTableBody');
+      if (logsList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">目前尚無操作日誌</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = logsList.map(l => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 text-slate-500 whitespace-nowrap">${l.time}</td>
+          <td class="p-3 font-sans font-medium">${l.operator}</td>
+          <td class="p-3 font-sans"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">${l.actionType}</span></td>
+          <td class="p-3 font-bold text-blue-600">${l.targetId}</td>
+          <td class="p-3 font-sans text-slate-700">${l.details}</td>
+        </tr>
+      `).join('');
+    }
+
+    function sendGasApi(payload, callback, finallyCb, errorCb) {
+      const reqPayload = Object.assign({}, payload, { token: adminToken });
+      fetch(GAS_WEB_APP_URL, { method: "POST", body: JSON.stringify(reqPayload) })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success") {
+          callback(data);
+        } else {
+          showToast(data.message, "error");
+          if (data.code === "UNAUTHORIZED") {
+            handleLogout();
+          }
+          if (errorCb) errorCb(data);
+        }
+      })
+      .catch(() => showToast("與伺服器連線失敗", "error"))
+      .finally(() => { if (finallyCb) finallyCb(); });
+    }
+
+    function showToast(msg, type = "info") {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      let bg = "bg-slate-900 text-white";
+      if (type === "success") bg = "bg-emerald-600 text-white";
+      if (type === "error") bg = "bg-red-600 text-white";
+      if (type === "warning") bg = "bg-amber-500 text-white";
+      toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-xl shadow-xl text-xs font-medium transition-all transform translate-y-2 opacity-0 ${bg}`;
+      toast.innerHTML = `<span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 50);
+      setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+  </script>
+</body>
+</html>
