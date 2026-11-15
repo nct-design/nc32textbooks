@@ -20,20 +20,24 @@
         button { background: #0066cc; color: white; border: none; cursor: pointer; transition: background 0.2s; font-weight: bold; margin-bottom: 0; }
         button:hover { background: #0052a3; }
 
-        /* 訂單卡片樣式 */
         .order-card { background: #fff; border: 1px solid #e1e4e8; border-left: 5px solid #0066cc; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .order-header { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; }
         .order-id { font-weight: bold; color: #333; font-size: 1.05rem; }
         
         .order-items { list-style: none; margin-top: 8px; }
-        .item-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background: #f9f9f9; border-radius: 6px; margin-bottom: 8px; font-size: 0.95rem; gap: 10px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f9f9f9; border-radius: 6px; margin-bottom: 8px; font-size: 0.95rem; gap: 10px; }
         .item-left { flex-grow: 1; }
-        .item-name { color: #333; font-weight: 500; display: block; margin-bottom: 3px; }
+        .item-name { color: #333; font-weight: 500; display: block; }
         
         .item-qty { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; font-weight: bold; font-size: 0.8rem; padding: 1px 6px; border-radius: 4px; margin-left: 5px; }
 
         .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; white-space: nowrap; }
-        .item-status { background: #e6f7ff; color: #0052a3; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .item-status { padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+        .status-new { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .status-ordering { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+        .status-arrived { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+        .status-picked { background: #d1fae5; color: #047857; border: 1px solid #6ee7b7; }
+        .status-cancelled { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
         .item-date { font-size: 0.75rem; color: #888; }
         
         .error-msg { color: #ff4d4f; font-weight: bold; text-align: center; margin-top: 10px; }
@@ -53,27 +57,25 @@
         </div>
 
         <div class="card">
-            <label for="phoneInput">聯絡電話（支援全組或最後 4 位）：</label>
-            <input type="text" id="phoneInput" placeholder="例如: 91234567 或 4567" onkeypress="handleKey(event, 'orderSuffixInput')">
+            <label for="phoneInput">完整聯絡電話（至少 8 位數字）：</label>
+            <input type="tel" id="phoneInput" placeholder="例如: 91234567" onkeypress="handleKey(event, 'orderSuffixInput')">
 
             <label for="orderSuffixInput">任一訂單編號最後 4 位數字：</label>
-            <input type="text" id="orderSuffixInput" placeholder="例如: 1024" onkeypress="handleKey(event, 'search')">
+            <input type="text" id="orderSuffixInput" maxlength="10" placeholder="例如: 7890" onkeypress="handleKey(event, 'search')">
 
             <button onclick="searchOrders()">立即安全查詢</button>
             <div id="resultArea"></div>
         </div>
 
-        <!-- 溫馨提示與聯絡資訊 -->
         <div class="footer-info">
             <p>如有任何查詢，歡迎 WhatsApp 聯絡：<a href="https://wa.me/85266667788" target="_blank">6666 7788</a> 或親臨門巿。</p>
             <p>到貨後我們會盡快更新狀態，謝謝您的耐心等候！</p>
         </div>
     </div>
 
-    <div class="version-badge">Ver: 20261031-004-exec-auth</div>
+    <div class="version-badge">Ver: 20261115-secure-auth</div>
 
     <script>
-        // 支援 Enter 鍵跳行或觸發查詢
         function handleKey(e, nextAction) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -85,47 +87,52 @@
             }
         }
 
-        // 🌐 請在此處填入你 Google Apps Script 部署取得的 /exec 網頁應用程式 URL
+        function getStatusClass(status) {
+            if (status === '已取貨' || status === '已完成') return 'status-picked';
+            if (status === '已到貨') return 'status-arrived';
+            if (status === '在訂中') return 'status-ordering';
+            if (status === '已取消') return 'status-cancelled';
+            return 'status-new';
+        }
+
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
 
         async function searchOrders() {
-            let phoneInput = document.getElementById('phoneInput').value.trim();
+            let phoneInput = document.getElementById('phoneInput').value.replace(/[\s-]/g, '').trim();
             let orderSuffix = document.getElementById('orderSuffixInput').value.trim();
             let resultArea = document.getElementById('resultArea');
 
-            if (phoneInput === "" || orderSuffix === "") {
-                resultArea.innerHTML = `<p class="error-msg">請完整填寫電話及訂單最後 4 位數字！</p>`;
+            if (phoneInput.length < 8) {
+                resultArea.innerHTML = `<p class="error-msg">請輸入完整的聯絡電話（至少 8 位數字）！</p>`;
                 return;
             }
-
-            if (GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
-                resultArea.innerHTML = `<p class="error-msg">系統尚未設定 GAS API 網址，請先在程式碼中填入 /exec 網址。</p>`;
+            if (orderSuffix.length < 4) {
+                resultArea.innerHTML = `<p class="error-msg">請輸入訂單編號最後 4 位數字！</p>`;
                 return;
             }
 
             resultArea.innerHTML = `<p style="text-align:center; color:#666; margin-top:10px;">安全驗證中，請稍候...</p>`;
 
             try {
-                // 向 GAS API 取得該電話號碼對應的資料
-                let response = await fetch(`${GAS_WEB_APP_URL}?phone=${encodeURIComponent(phoneInput)}`);
+                // 由 GAS 後端執行完整電話 + 單號後 4 位驗證
+                let response = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "publicQueryOrder",
+                        phone: phoneInput,
+                        orderSuffix: orderSuffix
+                    })
+                });
                 let result = await response.json();
 
                 if (result.status === "success") {
                     let userOrders = result.data || [];
 
-                    // 1. 安全比對：驗證該電話名下，是否有「任意一張訂單」的尾數符合輸入的 4 位單號
-                    let hasValidAuth = userOrders.some(item => {
-                        let orderIdStr = String(item.orderId || "").trim();
-                        return orderIdStr.endsWith(orderSuffix) || orderIdStr.includes(orderSuffix);
-                    });
-
-                    // 2. 驗證失敗處理
-                    if (userOrders.length === 0 || !hasValidAuth) {
-                        resultArea.innerHTML = `<p class="error-msg">搵唔到符合嘅記錄，請確認輸入嘅電話同訂單編號是否正確。</p>`;
+                    if (userOrders.length === 0) {
+                        resultArea.innerHTML = `<p class="error-msg">找不到符合的記錄，請確認輸入的電話與訂單編號是否正確。</p>`;
                         return;
                     }
 
-                    // 3. 驗證成功！將名下的所有訂單打包呈現
                     let ordersMap = {};
                     userOrders.forEach(item => {
                         let orderId = item.orderId || "未分類訂單";
@@ -138,7 +145,6 @@
                         ordersMap[orderId].items.push({
                             bookName: item.bookName,
                             qty: item.qty,
-                            totalPrice: item.totalPrice,
                             publicStatus: item.publicStatus,
                             updateDate: item.updateDate
                         });
@@ -152,15 +158,15 @@
                         let itemsHtml = ord.items.map(i => {
                             let qtyDisplay = `<span class="item-qty">x${i.qty} 件</span>`;
                             let dateDisplay = i.updateDate ? `<span class="item-date">更新: ${String(i.updateDate).substring(0, 10)}</span>` : '';
+                            let statusClass = getStatusClass(i.publicStatus);
                             
                             return `
                                 <li class="item-row">
                                     <div class="item-left">
                                         <span class="item-name">${i.bookName} ${qtyDisplay}</span>
-                                        <span style="font-size:0.8rem; color:#666;">折實價: $${i.totalPrice}</span>
                                     </div>
                                     <div class="item-right">
-                                        <span class="item-status">${i.publicStatus}</span>
+                                        <span class="item-status ${statusClass}">${i.publicStatus}</span>
                                         ${dateDisplay}
                                     </div>
                                 </li>
