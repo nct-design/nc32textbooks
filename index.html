@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>門巿訂書服務查詢</title>
+    <title>門市訂書服務查詢</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f0f2f5; color: #333; padding: 20px; position: relative; min-height: 100vh; padding-bottom: 70px; }
@@ -17,30 +17,54 @@
         
         label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.95rem; color: #444; }
         input, button { padding: 12px; font-size: 1rem; border: 1px solid #ddd; border-radius: 6px; outline: none; width: 100%; margin-bottom: 15px; }
+        input:focus { border-color: #0066cc; box-shadow: 0 0 0 2px rgba(0,102,204,0.1); }
+        
         button { background: #0066cc; color: white; border: none; cursor: pointer; transition: background 0.2s; font-weight: bold; margin-bottom: 0; }
-        button:hover { background: #0052a3; }
+        button:hover:not(:disabled) { background: #0052a3; }
+        button:disabled { background: #93c5fd; cursor: not-allowed; }
 
-        .order-card { background: #fff; border: 1px solid #e1e4e8; border-left: 5px solid #0066cc; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .order-header { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; }
-        .order-id { font-weight: bold; color: #333; font-size: 1.05rem; }
-        
-        .order-items { list-style: none; margin-top: 8px; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f9f9f9; border-radius: 6px; margin-bottom: 8px; font-size: 0.95rem; gap: 10px; }
-        .item-left { flex-grow: 1; }
-        .item-name { color: #333; font-weight: 500; display: block; }
-        
-        .item-qty { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; font-weight: bold; font-size: 0.8rem; padding: 1px 6px; border-radius: 4px; margin-left: 5px; }
+        /* 物流追蹤卡片樣式 */
+        .order-card { background: #fff; border: 1px solid #e1e4e8; padding: 18px; margin-top: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .order-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 14px; }
+        .order-id { font-weight: bold; color: #222; font-size: 1.05rem; }
+        .order-school { font-size: 0.85rem; color: #666; margin-top: 3px; }
+        .order-date { font-size: 0.78rem; color: #64748b; background: #f1f5f9; padding: 3px 8px; border-radius: 12px; white-space: nowrap; }
 
-        .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; white-space: nowrap; }
-        .item-status { padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
-        .status-new { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-        .status-ordering { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
-        .status-arrived { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
-        .status-picked { background: #d1fae5; color: #047857; border: 1px solid #6ee7b7; }
-        .status-cancelled { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-        .item-date { font-size: 0.75rem; color: #888; }
+        /* 4 步驟進度條 */
+        .stepper { display: flex; justify-content: space-between; position: relative; margin: 16px 0 18px 0; }
+        .stepper::before { content: ''; position: absolute; top: 11px; left: 10%; right: 10%; height: 3px; background: #e2e8f0; z-index: 1; }
+        .step { position: relative; z-index: 2; text-align: center; flex: 1; }
+        .step-dot { width: 24px; height: 24px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px auto; border: 2px solid #fff; transition: all 0.3s; }
+        .step-label { font-size: 0.72rem; color: #94a3b8; }
         
-        .error-msg { color: #ff4d4f; font-weight: bold; text-align: center; margin-top: 10px; }
+        .step.done .step-dot { background: #0066cc; color: #fff; }
+        .step.done .step-label { color: #333; font-weight: 500; }
+        .step.active .step-dot { background: #0066cc; color: #fff; box-shadow: 0 0 0 3px rgba(0,102,204,0.2); }
+        .step.active .step-label { color: #0066cc; font-weight: bold; }
+        .step.completed .step-dot { background: #10b981; color: #fff; }
+        .step.completed .step-label { color: #047857; font-weight: bold; }
+
+        /* 單一總結狀態框 */
+        .summary-box { padding: 14px; border-radius: 8px; font-size: 0.95rem; line-height: 1.5; font-weight: 500; margin-bottom: 12px; border-left: 4px solid; }
+        .theme-ordering { background: #f8fafc; color: #475569; border-color: #94a3b8; }
+        .theme-partial { background: #fffbeb; color: #b45309; border-color: #f59e0b; }
+        .theme-ready { background: #eff6ff; color: #1d4ed8; border-color: #2563eb; }
+        .theme-picked { background: #ecfdf5; color: #047857; border-color: #10b981; }
+        .theme-cancelled { background: #fef2f2; color: #b91c1c; border-color: #ef4444; }
+
+        /* 可收合書目明細 */
+        details.items-toggle { border-top: 1px dashed #e2e8f0; padding-top: 10px; }
+        details.items-toggle summary { font-size: 0.88rem; color: #0066cc; cursor: pointer; font-weight: 500; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        details.items-toggle summary::-webkit-details-marker { display: none; }
+        details.items-toggle summary::after { content: '▼'; font-size: 0.7rem; transition: transform 0.2s; }
+        details.items-toggle[open] summary::after { transform: rotate(180deg); }
+
+        .order-items { list-style: none; margin-top: 10px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; font-size: 0.88rem; gap: 10px; }
+        .item-name { color: #333; }
+        .item-qty { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; font-weight: bold; font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+
+        .error-msg { color: #b91c1c; background: #fee2e2; border: 1px solid #fca5a5; padding: 12px; border-radius: 8px; font-weight: 500; text-align: center; margin-top: 15px; font-size: 0.9rem; }
 
         .footer-info { text-align: center; font-size: 0.85rem; color: #666; margin-top: 25px; line-height: 1.6; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e1e4e8; }
         .footer-info a { color: #0066cc; text-decoration: none; font-weight: bold; }
@@ -52,55 +76,166 @@
 
     <div class="container">
         <div class="header-box">
-            <h1>📖 門巿訂書服務查詢</h1>
-            <p class="subtitle">即時查詢您的課本到貨狀況</p>
+            <h1>📖 門市訂書服務查詢</h1>
+            <p class="subtitle">即時追蹤您的課本備貨進度</p>
         </div>
 
         <div class="card">
-            <label for="phoneInput">完整聯絡電話（至少 8 位數字）：</label>
-            <input type="tel" id="phoneInput" placeholder="例如: 91234567" onkeypress="handleKey(event, 'orderSuffixInput')">
+            <form onsubmit="event.preventDefault(); searchOrders();">
+                <label for="phoneInput">完整聯絡電話（至少 8 位數字）：</label>
+                <input type="tel" id="phoneInput" inputmode="numeric" placeholder="例如: 91234567" required>
 
-            <label for="orderSuffixInput">任一訂單編號最後 4 位數字：</label>
-            <input type="text" id="orderSuffixInput" maxlength="10" placeholder="例如: 7890" onkeypress="handleKey(event, 'search')">
+                <label for="orderSuffixInput">任一訂單編號最後 4 位數字：</label>
+                <input type="text" id="orderSuffixInput" maxlength="10" placeholder="例如: 7890" required>
 
-            <button onclick="searchOrders()">立即安全查詢</button>
+                <button type="submit" id="searchBtn">立即安全查詢</button>
+            </form>
             <div id="resultArea"></div>
         </div>
 
         <div class="footer-info">
-            <p>如有任何查詢，歡迎 WhatsApp 聯絡：<a href="https://wa.me/85266667788" target="_blank">6666 7788</a> 或親臨門巿。</p>
+            <p>如有任何查詢，歡迎 WhatsApp 聯絡：<a href="https://wa.me/85266667788" target="_blank">6666 7788</a> 或親臨門市。</p>
             <p>到貨後我們會盡快更新狀態，謝謝您的耐心等候！</p>
         </div>
     </div>
 
-    <div class="version-badge">Ver: 20261115-secure-auth</div>
+    <div class="version-badge">Ver: 20261117-logistics-ui</div>
 
     <script>
-        function handleKey(e, nextAction) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (nextAction === 'search') {
-                    searchOrders();
-                } else {
-                    document.getElementById(nextAction).focus();
-                }
-            }
-        }
-
-        function getStatusClass(status) {
-            if (status === '已取貨' || status === '已完成') return 'status-picked';
-            if (status === '已到貨') return 'status-arrived';
-            if (status === '在訂中') return 'status-ordering';
-            if (status === '已取消') return 'status-cancelled';
-            return 'status-new';
-        }
-
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwT8f6alN0YaSgyc6Z_qtYevwILjyYJVaP6Y3BPV3TlSkicV17GNcgpF-F9WIXeojPfBQ/exec";
 
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // 核心邏輯：根據訂單內所有書本狀態，自動判斷單一總結訊息與進度
+        function analyzeOrderStatus(items) {
+            // 排除「已取消」的書本
+            const activeItems = items.filter(i => i.publicStatus !== '已取消');
+            
+            // 找出最新更新日期
+            const dates = items
+                .map(i => i.updateDate ? String(i.updateDate).substring(0, 10) : '')
+                .filter(d => d.length > 0)
+                .sort()
+                .reverse();
+            const latestDate = dates.length > 0 ? dates[0] : '';
+
+            if (activeItems.length === 0) {
+                return {
+                    step: 0,
+                    theme: 'theme-cancelled',
+                    message: '本訂單已取消，如有疑問請聯絡門市查詢。',
+                    latestDate
+                };
+            }
+
+            const total = activeItems.length;
+            const pickedCount = activeItems.filter(i => i.publicStatus === '已取貨' || i.publicStatus === '已完成').length;
+            const arrivedCount = activeItems.filter(i => i.publicStatus === '已到貨').length;
+
+            // 1. 所有書本都「已取貨」
+            if (pickedCount === total) {
+                return {
+                    step: 4,
+                    theme: 'theme-picked',
+                    message: '✅ 本訂單所有課本已領取完畢，感謝您的支持！',
+                    latestDate
+                };
+            }
+
+            // 2. 所有書本都「已到貨」
+            if (arrivedCount === total) {
+                return {
+                    step: 3,
+                    theme: 'theme-ready',
+                    message: '🎉 您的全單課本已全部齊備！歡迎隨時蒞臨門市領取。',
+                    latestDate
+                };
+            }
+
+            // 3. 客人已先取走部分課本（防呆處理）
+            if (pickedCount > 0) {
+                const msg = arrivedCount > 0
+                    ? '部分課本已領取，另有已到店課本可隨時前來領取（其餘課本仍跟進中）。'
+                    : '部分課本已領取，餘下課本正正向出版社採購及跟進中。';
+                return {
+                    step: arrivedCount > 0 ? 3 : 2,
+                    theme: arrivedCount > 0 ? 'theme-ready' : 'theme-partial',
+                    message: msg,
+                    latestDate
+                };
+            }
+
+            // 4. 「已到貨」達 50% 以上（未全齊）
+            if (arrivedCount / total >= 0.5) {
+                return {
+                    step: 3,
+                    theme: 'theme-ready',
+                    message: '超過一半課本已到店並完成執貨！您可隨時前來先取已到課本，或待全單齊備後一併領取。',
+                    latestDate
+                };
+            }
+
+            // 5. 有書「已到貨」，但未達 50%
+            if (arrivedCount > 0) {
+                return {
+                    step: 2,
+                    theme: 'theme-partial',
+                    message: '部分課本已陸續到店，職員正進行點貨及配對中（暫未開放取書）。',
+                    latestDate
+                };
+            }
+
+            // 6. 全部書本都是「在訂中」（或新訂單）
+            return {
+                step: 1,
+                theme: 'theme-ordering',
+                message: '訂單已確認，正向各大出版社採購中。',
+                latestDate
+            };
+        }
+
+        function renderStepper(currentStep) {
+            if (currentStep === 0) return '';
+            const steps = ['訂單確認', '點貨配對', '可供取書', '領取完畢'];
+            return `
+                <div class="stepper">
+                    ${steps.map((label, idx) => {
+                        const stepNum = idx + 1;
+                        let cls = '';
+                        let icon = stepNum;
+                        if (currentStep === 4) {
+                            cls = 'completed';
+                            icon = '✓';
+                        } else if (stepNum < currentStep) {
+                            cls = 'done';
+                            icon = '✓';
+                        } else if (stepNum === currentStep) {
+                            cls = 'active';
+                        }
+                        return `
+                            <div class="step ${cls}">
+                                <div class="step-dot">${icon}</div>
+                                <div class="step-label">${label}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
         async function searchOrders() {
-            let phoneInput = document.getElementById('phoneInput').value.replace(/[\s-]/g, '').trim();
-            let orderSuffix = document.getElementById('orderSuffixInput').value.trim();
-            let resultArea = document.getElementById('resultArea');
+            const phoneInput = document.getElementById('phoneInput').value.replace(/\D/g, '');
+            const orderSuffix = document.getElementById('orderSuffixInput').value.trim();
+            const resultArea = document.getElementById('resultArea');
+            const searchBtn = document.getElementById('searchBtn');
 
             if (phoneInput.length < 8) {
                 resultArea.innerHTML = `<p class="error-msg">請輸入完整的聯絡電話（至少 8 位數字）！</p>`;
@@ -111,11 +246,12 @@
                 return;
             }
 
-            resultArea.innerHTML = `<p style="text-align:center; color:#666; margin-top:10px;">安全驗證中，請稍候...</p>`;
+            searchBtn.disabled = true;
+            searchBtn.textContent = "查詢中...";
+            resultArea.innerHTML = `<p style="text-align:center; color:#666; margin-top:15px;">安全驗證中，請稍候...</p>`;
 
             try {
-                // 由 GAS 後端執行完整電話 + 單號後 4 位驗證
-                let response = await fetch(GAS_WEB_APP_URL, {
+                const response = await fetch(GAS_WEB_APP_URL, {
                     method: "POST",
                     body: JSON.stringify({
                         action: "publicQueryOrder",
@@ -123,66 +259,66 @@
                         orderSuffix: orderSuffix
                     })
                 });
-                let result = await response.json();
+                const result = await response.json();
 
                 if (result.status === "success") {
-                    let userOrders = result.data || [];
+                    const userOrders = result.data || [];
 
                     if (userOrders.length === 0) {
                         resultArea.innerHTML = `<p class="error-msg">找不到符合的記錄，請確認輸入的電話與訂單編號是否正確。</p>`;
                         return;
                     }
 
-                    let ordersMap = {};
+                    const ordersMap = {};
                     userOrders.forEach(item => {
-                        let orderId = item.orderId || "未分類訂單";
+                        const orderId = item.orderId || "未分類訂單";
                         if (!ordersMap[orderId]) {
                             ordersMap[orderId] = {
                                 school: item.school,
                                 items: []
                             };
                         }
-                        ordersMap[orderId].items.push({
-                            bookName: item.bookName,
-                            qty: item.qty,
-                            publicStatus: item.publicStatus,
-                            updateDate: item.updateDate
-                        });
+                        ordersMap[orderId].items.push(item);
                     });
 
-                    let html = `<h3 style="margin: 15px 0 10px 0; font-size:1.1rem; color:#444; text-align:left;">為你找到以下名下所有訂單：</h3>`;
-                    
-                    for (let orderId in ordersMap) {
-                        let ord = ordersMap[orderId];
-                        
-                        let itemsHtml = ord.items.map(i => {
-                            let qtyDisplay = `<span class="item-qty">x${i.qty} 件</span>`;
-                            let dateDisplay = i.updateDate ? `<span class="item-date">更新: ${String(i.updateDate).substring(0, 10)}</span>` : '';
-                            let statusClass = getStatusClass(i.publicStatus);
-                            
-                            return `
-                                <li class="item-row">
-                                    <div class="item-left">
-                                        <span class="item-name">${i.bookName} ${qtyDisplay}</span>
-                                    </div>
-                                    <div class="item-right">
-                                        <span class="item-status ${statusClass}">${i.publicStatus}</span>
-                                        ${dateDisplay}
-                                    </div>
-                                </li>
-                            `;
-                        }).join('');
+                    let html = `<h3 style="margin: 18px 0 5px 0; font-size:1.05rem; color:#444;">為您找到以下訂單進度：</h3>`;
+
+                    for (const orderId in ordersMap) {
+                        const ord = ordersMap[orderId];
+                        const summary = analyzeOrderStatus(ord.items);
+                        const dateBadge = summary.latestDate 
+                            ? `<span class="order-date">最後更新：${escapeHtml(summary.latestDate)}</span>` 
+                            : '';
+
+                        const itemsHtml = ord.items.map(i => `
+                            <li class="item-row">
+                                <span class="item-name">${escapeHtml(i.bookName)}</span>
+                                <span class="item-qty">x${escapeHtml(i.qty)}</span>
+                            </li>
+                        `).join('');
 
                         html += `
                             <div class="order-card">
                                 <div class="order-header">
-                                    <span class="order-id">🔖 訂單編號: ${orderId}</span>
+                                    <div>
+                                        <div class="order-id">🔖 訂單編號: ${escapeHtml(orderId)}</div>
+                                        <div class="order-school">🏫 ${escapeHtml(ord.school || '門市訂單')}</div>
+                                    </div>
+                                    ${dateBadge}
                                 </div>
-                                <p style="font-size:0.9rem; color:#666; margin-bottom:8px;">🏫 學校：${ord.school || '門市訂單'}</p>
-                                <p style="font-size:0.9rem; font-weight:bold; margin-bottom:4px;">🛒 購買明細：</p>
-                                <ul class="order-items">
-                                    ${itemsHtml}
-                                </ul>
+
+                                ${renderStepper(summary.step)}
+
+                                <div class="summary-box ${summary.theme}">
+                                    ${summary.message}
+                                </div>
+
+                                <details class="items-toggle">
+                                    <summary>查看訂購書目明細（共 ${ord.items.length} 項）</summary>
+                                    <ul class="order-items">
+                                        ${itemsHtml}
+                                    </ul>
+                                </details>
                             </div>
                         `;
                     }
@@ -190,11 +326,14 @@
                     resultArea.innerHTML = html;
 
                 } else {
-                    resultArea.innerHTML = `<p class="error-msg">${result.message || "查詢失敗，請稍後再試。"}</p>`;
+                    resultArea.innerHTML = `<p class="error-msg">${escapeHtml(result.message || "查詢失敗，請稍後再試。")}</p>`;
                 }
 
             } catch (err) {
-                resultArea.innerHTML = `<p class="error-msg">連線伺服器失敗，請檢查網絡或 API 網址。</p>`;
+                resultArea.innerHTML = `<p class="error-msg">連線伺服器失敗，請檢查網絡或稍後再試。</p>`;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = "立即安全查詢";
             }
         }
     </script>
